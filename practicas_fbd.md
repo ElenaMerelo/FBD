@@ -219,18 +219,391 @@ Para conocer qué tablas tenemos creadas hasta este momento, podemos consultar u
 del catálogo del SGBD denominada user_tables, en la forma que sigue:
 `SQL> SELECT table_name FROM user_tables;`
 
+**Ejercicio 2.8 Ejecuta la sentencia SELECT para mostrar el contenido de las tablas PRUEBA2
+y PLANTILLA. Intenta mostrar sólo algunos campos de las mismas.**
+
+~~~sql
+select * from prueba2;
+select * from plantilla;
+select dni from plantilla;
+~~~
+
+#### Modificar el contenido de una tabla
+Para modificar los datos de una tabla introducidos con anterioridad, hemos de utilizar la
+sentencia UPDATE, cuya forma general es la siguiente:
+~~~sql
+UPDATE nombre_tabla
+SET nombre_atributo = ’nuevovalor’
+[, nombre_atributo2 = ’nuevovalor2’...]
+[WHERE <condicion> ];
+~~~
+Esta sentencia modifica la/s tupla/s que se ajustan al criterio especificado en la cláusula
+WHERE. Hay que destacar que [] indica opcionalidad. Así, se puede modificar un atributo o
+más de un atributo simultáneamente. La sintaxis de la cláusula WHERE se basa en la expresión
+recogida en <condicion>, una expresión es lógica.
+**Ejemplo 2.4 Ejecuta la sentencia UPDATE sobre la tabla plantilla y cambia el estado civil de
+Juan a divorciado.**
+~~~sql
+SQL> update plantilla
+set estadocivil = ’divorciado’
+where nombre=’Juan’;
+~~~
+
+**Ejercicio 2.9 Ejecuta la sentencia UPDATE sobre la tabla plantilla y cambia el nombre del
+trabajador con dni ’12345678’ a ’Luis’.**
+~~~sql
+SQL> update plantilla
+set nombre= `Luis`
+where dni= '12345678';
+~~~
+
+#### Borrado de tuplas
+La instrucción DELETE se utiliza para eliminar tuplas de una tabla. Las tuplas que se
+eliminan son aquellas que hacen cierta la expresión <condicion>. Su sintaxis es la siguiente:
+`DELETE [FROM] nombre_tabla [WHERE <condicion>];`
+Donde [] nuevamente indica opcionalidad y condicion es cualquier expresión lógica.
+
+**Ejemplo 2.5 Borra todas las tuplas de la tabla prueba2.**
+`SQL> DELETE FROM prueba2;`
+
+**Ejercicio 2.10 Borra todas las tuplas de la tabla plantilla.**
+`SQL> DELETE FROM plantilla;`
+
+**En este caso da un mensaje de error (¿por qué?). Aunque sí podríamos borrar las tuplas
+de la tabla serjefe.** Esto ocurre ya que la tabla serjefe referencia a plantilla, y no al revés.
+
+#### Particularidades del tipo de dato DATE
+El tipo DATE sirve para almacenar información relativa a fechas. Está expresado en Juliano
+y su rango va del 1 de Enero de 4712 “Antes de Cristo” al 31 de Diciembre de 9999. Un
+determinado valor de este tipo almacena los segundos transcurridos desde el 1 de Enero de 4712
+“Antes de Cristo”. Este formato de fecha permite, por tanto, disponer de un referencial contínuo
+para el almacenamiento y la manipulación de fechas.
+Oracle permite sumar y restar valores constantes y otras fechas a los datos de tipo fecha.
+Para ello, la fecha se representa internamente como un único número (número de días); así, por
+ejemplo, SYSDATE + 1 es mañana , SYSDATE - 7 es hace una semana y SYSDATE + (10/1440)
+es dentro de diez minutos.
+
+**Ejemplo 2.6 Ejecuta la sentencia UPDATE sobre la tabla plantilla y cambia la fecha de alta
+de Juan al día siguiente.**
+
+~~~sql
+SQL> UPDATE plantilla
+SET fechaalta = fechaalta+1
+WHERE nombre=’Juan’;
+~~~
+
+Aunque los datos de fecha podrían representarse mediante los tipos VARCHAR y NUMBER,
+el tipo DATE ofrece, además, funciones específicas para su manejo que tienen en cuenta su
+semántica.
+##### Introducción de fechas mediante la función TO_DATE
+Con esta función se genera un valor de tipo date a partir del valor suministrado por la
+primera cadena pasada a la función usando como formato la segunda cadena proporcionada.
+Por ejemplo:
+~~~sql
+SQL> insert into plantilla
+values (’11223355’,’Miguel’,’casado’,
+TO_DATE(’22/10/2005’,’dd/mm/yyyy’),null);
+~~~
+
+**Ejemplo 2.7** `SQL> select TO_CHAR(fechaalta,’dd-mon-yyyy’) from plantilla;`
+
+Si se omite la función TO_CHAR en la sentencia select, el formato aplicado será el que haya
+por defecto.
+
+**Ejercicio 2.12 Actualizar la fecha del proveedor S5 al año 2005’**
+~~~sql
+SQL> UPDATE ventas
+SET fecha = TO_DATE(2005,’YYYY’)
+WHERE codpro=’S5’;
+~~~
+
+**Ejercicio 2.13 Para mostrar la columna FECHA con un formato específico e imprimirla,
+utilizar la siguiente sentencia:**
+~~~sql
+SQL> select codpro,codpie,
+to_char(fecha,’"Dia" day,dd/mm/yy’) from ventas;
+~~~
+donde el texto que se quiere incluir como parte de la fecha debe ir entre comillas dobles.
+
+> EXPLICACIÓN PROFESOR
+select == pi (proyección). Si ponemos select distinct no pone las tablas duplicadas
+from == x (poducto cartesiano)
+where == sigma (selección)
+
+>Ejemplo: `select codpro from proveedor where ciudad= 'Londres'` para ver los proveedores que son de Londres.
+
+>Para conjuntos: union (all si queremos que nos muestre los elementos que están más de una vez), minus, intersect, select.
+Si no queremos proyectar ponemos asterisco: select \*.
+
+> `select * from ventas v, ventas v2 where v.codpro= 'S5'`
+
+> `select * from proveedor order by ciudad desc` para dar un criterio de ordenación a las tuplas, si las queremos en orden por ciudad descendente.
+
+> `select * from proveedor order by ciudad, status;` ordena por ciudad, si hay igualdad mira status. Por defecto ordena
+ascendentemente.
+
+> Tipo de dato fecha: `to_date(cadena, formato)` por ejemplo cadena= '22/07/2018', formato= 'dd/mm/yyyy', pasa la fecha a un
+formato que él entiende. `to_char(fecha, formato)` hace lo contrario.
+
+> `select sysdate from dual` nos la fecha del día en el formato por defecto del sistema. `select to_char(sysdate, 'yyyy') from dual`
+dice el año en el que estamos.
+
+> Es muy habitual que cometamos el error de comparar en el dominio de las cadenas, y eso a veces puede no funcionar. Si vamos
+a comparar fechas, lo hacemos en el dominio de las fechas.
+
+> `select sysdate-to_date('23/06/1998' 'DD/MM/YYYY') from dual;` dice los días que han pasado desde que nací.
+
+> `select (sysdate-to_date('23/06/1998', 'dd/mm/yyyy'))/365 from dual;` dice los años que tengo.
+
+> sql convierte la aritmética de fechas en aritmética real.
+
+> `select sysdate from ventas` por cada tupla de ventas me saca lo que he puesto en el select, me repite la fecha del sistema tantas
+veces como tuplas haya.
+
+> `select cantidad*3-5 from ventas` multiplica cantidad de la tabla ventas por 3, le resta 5.
 
 
 
+### La sentencia de consulta SELECT
+La sentencia SELECT permite consultar las tablas seleccionando datos en tuplas y columnas
+de una o varias tablas. La sintaxis general de la sentencia con sus múltiples cláusulas se detalla a
+continuación:
+~~~sql
+SELECT [ DISTINCT | ALL]
+expresion [alias_columna_expresion]
+{,expresion [alias_columna_expresion]}
+FROM [esquema.]tabla|vista [alias_tabla_vista]
+[WHERE <condicion>]
+[GROUP BY expresion {,expresion}]
+[{UNION | UNION ALL | INTERSECT | MINUS} <SELECT instruccion>]
+[HAVING <condicion>]
+[ORDER BY {expresion} [ASC | DESC]]
+~~~
+Seguidamente iremos viendo con detalle algunas de sus principales cláusulas.
 
+#### La consulta en SQL y su relación con los operadores del AR
+En este apartado ejercitaremos los siguientes componentes de la sentencia SELECT:
+~~~sql
+SELECT [ DISTINCT | ALL]
+<expresion> [alias_columna_expresion]
+{,<expresion> [alias_columna_expresion]}
+FROM [esquema.]tabla|vista [alias_tabla_vista]
+[ WHERE <condicion>]
+~~~
 
+##### La proyección AR en SQL
+La proyección del Álgebra Relacional se expresa en la sentencia SELECT mediante la lista
+de campos, denominados “select list” que se relacionan entre la cláusula SELECT y la cláusula
+FROM. Se utiliza el ∗ para determinar que se proyecte sobre todos los campos de las tablas
+listadas en la cláusula FROM.
 
+**Ejemplo 3.1 Muestra las ciudades donde hay un proyecto.**
 
+AR: `π ciudad (Proyecto)`
 
+`SQL> Select ciudad from proyecto;`
 
+No sale lo mismo que en AR, porque salen tuplas repetidas. Para solucionarlo:
 
+`SQL> Select distinct ciudad from proyecto;`
 
+**Ejemplo 3.2 Muestra la información disponible acerca de los proveedores.**
 
+`SQL> Select * from proveedor;` * muestra el esquema completo, o bien proyectando
+uno a uno los atributos
+`SQL> Select codpro, nompro, status, ciudad from proveedor;`
+
+**Ejercicio 3.2 Muestra los suministros realizados (tan solo los códigos de los componentes
+de una venta). ¿Es necesario utilizar DISTINCT?**
+
+`select codpro, codpie, codpj from ventas`. No es necesario emplear distinct dado que
+estamos proyectando columnas que son claves primarias , luego no deberían de aparecer repeticiones.
+
+#### La selección AR en SQL
+Para realizar la selección Algebráica σ en SQL se emplea la cláusula WHERE seguida de
+<condicion>, aunque siempre será necesario especificar la cláusula SELECT de la instrucción
+de consulta. <condicion> es una expresión booleana que implica cualquiera de los atributos de
+la tabla que figura en la cláusula FROM de la instrucción. Los operadores que pueden intervenir
+en esta expresión son cualesquiera de los ya presentados en la Tabla 2.2 y algunos adicionales
+que mostramos en esta sección.
+
+**Ejemplo 3.3 Muestra los códigos de los proveedores que suministran al proyecto ’J1’.**
+
+AR : π cod pro (σ cod p j= 0 J1 0 (Ventas))
+
+`SQL> Select codpro from ventas where codpj=’J1’;`
+
+**Ejercicio 3.3 Muestra las piezas de Madrid que son grises o rojas.**
+
+`select * from ventas where (color='rojo' or color='gris') and (ciudad='Madrid');`
+
+**Ejercicio 3.4 Encontrar todos los suministros cuya cantidad está entre 200 y 300, ambos
+inclusive.**
+
+`select * from ventas where cantidad >= 200 and cantidad <= 300;`
+
+> Construcción de expresiones lógicas: operadores adicionales. El operador `like` y los caracteres comodín `_` y `%`
+
+El operador `like` se emplea para comparar cadenas de caracteres mediante el uso de patrones. Cuando se emplea el carácter
+comodín `%`, éste se sustituye por cualquier cadena de 0 ó más caracteres:
+
+**Ejemplo 3.4 Mostrar los proveedores cuyo nombre de ciudad empieza por ’L’.**
+
+`SQL> Select codpro, nompro from proveedor where ciudad LIKE ’L%’;`
+
+El carácter comodín `_` sustituye un sólo carácter.
+
+**Ejercicio 3.5 Mostrar las piezas que contengan la palabra tornillo con la t en
+mayúscula o en minúscula.**
+`select * from pieza where nompie like 'tornillo' or 'Tornillo';`
+Otra opción sería:
+`select * from pieza where nompie like '_ornillo'`
+
+**Ejemplo 3.15 Describe la cantidad de cada venta expresada en docenas, sólo de las
+ventas cuyo número de piezas es mayor de diez docenas.**
+
+`select cantidad/12 from ventas where (cantidad/12) > 10;`
+
+> Comparación con el valor nulo. El operador IS [NOT] NULL
+
+**Ejemplo 3.6 Encontrar los proveedores que tienen su status registrado en la base de
+datos.**
+
+`select nompro,codpro from proveedor where status is not null;`
+
+#### Consultas sobre el catálogo
+
+**Ejemplo 3.7 Mostrar la información de todas las tablas denominadas ventas a las que tienes
+acceso.**
+~~~sql
+SQL> Select table_name
+from ALL_TABLES
+where TABLE_NAME like ’%ventas’;
+~~~
+
+**Ejercicio 3.6 Comprueba que no devuelve ninguna. Pero SÍ que hay!!!**
+
+No devuelve ninguna dado que en el catálogo en el que se guardan todas las tablas
+que declaramos están almacenadas en mayúsculas, y las búsquedas son *case sensitive*. Escribiendo pues `select table_name from all_tables where table_name like '%VENTAS';` obtenemos lo deseado.
+
+#### Operadores AR sobre conjuntos en SQL
+~~~SQL
+<SELECT instrucción>
+UNION | UNION ALL | INTERSECT | MINUS
+<SELECT instrucción>
+~~~
+Estos operadores tienen una restricción similar a sus correspondientes del AR para poder
+llevarse a cabo: los esquemas de las tablas resultantes de cada sentencia SELECT han de ser
+iguales en tipo, esto es, los atributos no tienen por qué llamarse igual, aunque sí han de coincidir
+en número, posición en el “select list” y tipo. Tras la operación, el esquema del resultado coincide
+con el esquema del primer operando.
+
+**Ejemplo 3.8 Ciudades donde viven proveedores con status mayor de 2 en las que no se fabrica
+la pieza ’P1’.**
+`select distinct ciudad from proveedor where status > 2 MINUS select distinct ciudad from pieza where codpie = 'P1';`
+
+Nótese que los operadores UNION, MINUS e INTERSECT implementan en SQL las operaciones U , −, ∩ del AR, respectivamente y por tanto, consideran los argumentos como
+relaciones (sin tuplas repetidas) y devuelven el resultado como una relación (sin tuplas repetidas).
+Por consiguiente, la sentencia SQL que resuelve el ejercicio anterior podría prescindir de las
+cláusulas distinct. Sin embargo el operador UNION ALL devuelve todas las tuplas incluidas en
+las tablas argumento, sin eliminar tuplas duplicadas.
+
+**Ejercicio 3.7 Resolver la consulta del ejemplo 3.8 utilizando el operador ∩.**
+
+`select ciudad from proveedor where status > 2 ∩ select ciudad from pieza where codpie != 'P1';`
+
+**Ejercicio 3.8 Encontrar los códigos de aquellos proyectos a los que sólo abastece ’S1’.**
+
+`select codpj from ventas where codpro= 'S1' - select codpj from ventas where codpro != 'S1';`
+
+Esto es, a aquellos proyectos a los que abastece S1 le quitamos los proyectos a los que
+abastecen otros proveedores que no son S1, de manera que si a J2 le abastece S1 y otro
+que no sea S1 no aparece, se quedan sólo los de S1, como queríamos.
+
+Otra opción es: `select codpj from proyecto where not exists (select codpro from proveedor where codpro != 'S1');`, es decir,
+seleccionamos el código de los proyectos en los que no exista un proveedor que sea distinto de S1; nos
+quedamos con los códigos de los proyectos en los que el único proveedor es S1, no puede
+existir otro que no sea él.
+
+**Ejercicio 3.9 Mostrar todas las ciudades de la base de datos. Utilizar UNION**
+
+`select ciudad from proyecto UNION select ciudad from pieza UNION select ciudad from proveedor;`
+
+**Ejercicio 3.10 Mostrar todas las ciudades de la base de datos. Utilizar UNION ALL**
+Igual que el anterior pero poniendo union all, la diferencia con union es que no elimina duplicados,
+por lo que a la hora de hacer select habría que poner distinct.
+
+#### El producto cartesiano AR en SQL
+En la cláusula FROM de una sentencia de consulta puede aparecer una lista de tablas en lugar
+de una sola. En este caso, el sistema realiza el producto cartesiano de todas las tablas incluidas
+en dicha lista para, posteriormente, seleccionar aquellas tuplas que hacen verdad la condición de
+la cláusula WHERE (en el caso de que se haya establecido) mostrándolas como resultado de ese
+producto cartesiano.
+**Ejercicio 3.11 Comprueba cuántas tuplas resultan del producto cartesiano aplicado a ventas
+y proveedor.**
+`select (count *) from ventas, proveedor;`. Más adelante está explicado el count.
+
+**Ejemplo 3.9 Muestra las posibles ternas (codpro,codpie,codpj) tal que, todos los implicados
+sean de la misma ciudad.**
+~~~sql
+select codpro, codpie, codpj from proveedor, proyecto, pieza
+where proyecto.ciudad = pieza.ciudad and pieza.ciudad = proveedor.ciudad;
+~~~
+
+**Ejemplo 3.10 Mostrar las ternas (codpro,codpie,codpj) tal que todos los implicados son de
+Londres.**
+
+~~~sql
+select codpro, codpie, codpj from proveedor, proyecto, pieza
+where proyecto.ciudad = 'Londres' and pieza.ciudad= 'Londres' and proveedor.ciudad= 'Londres';
+~~~
+
+**Ejercicio 3.12 Mostrar las ternas que son de la misma ciudad pero que hayan realizado
+alguna venta( que entre ellos haya alguna venta).**
+
+~~~sql
+select codpro, codpie, codpj from proveedor, proyecto, pieza
+where proyecto.ciudad = pieza.ciudad and pieza.ciudad = proveedor.ciudad INTERSECT
+select codpro, codpie, codpj from ventas;
+~~~
+
+Otra opción sería:
+
+~~~sql
+select Proveedor.codpro, Pieza.codpie, Proyecto.codpj
+from proveedor, proyecto, pieza, ventas
+where Proveedor.ciudad= Proyecto.ciudad
+and Proyecto.ciudad= Pieza.ciudad
+and Ventas.codpro= Proveedor.codpro
+and Ventas.codpie= Pieza.codpie
+and Ventas.codpj= Proyecto.codpj;
+~~~
+
+#### El renombramiento o alias en SQL
+El empleo de alias puede ser útil para abreviar texto cuando es necesario prefijar atributos
+para eliminar ambigÜedades, sin embargo, es estrictamente necesario cuando se hace un producto
+cartesiano de una tabla consigo misma o cuando hay que hacer referencia a los campos de una
+consulta incluida en la cláusula FROM. Los alias se definen asociándolos a aquellas tablas o
+consultas presentes en la cláusula FROM que se deseen redefinir.
+
+**Ejemplo 3.11 (Ligeramente variado) Muestra las posibles ternas (codpro,codpie,codpj) tal que todos los implicados
+sean de la misma ciudad y entre ellos haya alguna venta.**
+
+~~~sql
+select s.codpro, p.codpie, j.codpj
+from proveedor s, proyecto j, pieza p, ventas spj
+where s.ciudad= j.ciudad
+and j.ciudad= p.ciudad
+and spj.codpro= s.codpro
+and spj.codpie= p.codpie
+and spj.codpj= j.codpj;
+~~~
+
+**Ejercicio 3.13 Encontrar parejas de proveedores que no viven en la misma ciudad.**
+
+`select x.codpro, y.codpro from proveedor x, proveedor y where x.ciudad != y.ciudad;`
+
+**Ejercicio 3.14 Encuentra las piezas con máximo peso.**
 
 
 
