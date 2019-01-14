@@ -533,6 +533,7 @@ existir otro que no sea él.
 Igual que el anterior pero poniendo union all, la diferencia con union es que no elimina duplicados,
 por lo que a la hora de hacer select habría que poner distinct.
 
+
 #### El producto cartesiano AR en SQL
 En la cláusula FROM de una sentencia de consulta puede aparecer una lista de tablas en lugar
 de una sola. En este caso, el sistema realiza el producto cartesiano de todas las tablas incluidas
@@ -604,6 +605,223 @@ and spj.codpj= j.codpj;
 `select x.codpro, y.codpro from proveedor x, proveedor y where x.ciudad != y.ciudad;`
 
 **Ejercicio 3.14 Encuentra las piezas con máximo peso.**
+Para ello cogemos todas las piezas y les quitamos aquellas con mínimo peso:
+`select nompie, codpie, peso from pieza MINUS select x.nompie, x.codpie, x.peso from pieza x, pieza y where x.peso < y.peso`
+Otra opción, usando las funciones de agregación que veremos más adelante, es:
+`select * from pieza where peso >= ALL (select peso from pieza);`
+
+#### La equi-reunión y la reunión natural AR en SQL
+Llegado este punto, disponemos de todos los elementos SQL para expresar el operador
+equi-reunión y la reunión natural. Para la reunión natural se usa la cláusula NATURAL JOIN
+dentro de la cláusula FROM entre las tablas o subconsultas participantes. EL SGBD aplica la
+reunión natural sobre aquellos campos que se llamen de igual forma en las tablas o subconsultas
+intervinientes, si no coincidieran en tipo, devolvería error.
+
+**Ejemplo 3.12 Mostrar los nombres de proveedores y cantidad de aquellos que han realizado
+alguna venta en cantidad superior a 800 unidades.**
+`select nompro, cantidad from proveedor NATURAL JOIN (select * from ventas where cantidad >= 800 NATURAL JOIN ventas where cantidad >= 800`
+Si no se hubiera hecho con reunión natural habría sido:
+`select nompro, cantidad from proveedor s (select codpro from ventas where cantidad >= 800) y where s.codpro= y.codpro`
+
+Observe el resultado que se obtiene de la reunión natural cuando se proyecta sobre todos
+los atributos. Si se quiere reunir en base a campos que no tienen el mismo nombre, se pueden
+usar dos alternativas: producto cartesiano junto a condición de reunión en la cláusula WHERE
+o la equi-reunión expresada mediante cláusula JOIN ... ON en la forma que se indica a
+continuación:
+~~~sql
+SQL> Select nompro, cantidad
+from proveedor s JOIN (select * from ventas where cantidad>800) v
+ON (s.codpro=v.codpro);
+~~~
+
+**Ejercicio 3.15 Mostrar las piezas vendidas por los proveedores de Madrid.**
+Si sólo quisiéramos saber el código de las piezas vendidas por los proveedores de Madrid:
+`select codpie from ventas NATURAL JOIN (select * from proveedor where ciudad= 'Madrid')`
+
+Sin usar reunión natural:
+`select codpie from ventas v (select * from proveedor where ciudad= 'Madrid') p where v.codpro= p.codpro`
+
+Equivalente a:
+~~~sql
+select v.codpie
+from ventas v, proveedor p
+where v.codpro= p.codpro and p.ciudad= 'Madrid';
+~~~
+
+Si quisiéramos obtener toda la información sobre la pieza:
+`select * from pieza NATURAL JOIN (select * from ventas NATURAL JOIN (select codpro from proveedor where ciudad= 'Madrid'))`
+
+Y haciéndolo normalis y corrientismente:
+`select * from pieza p (select * from ventas v (select codpro from proveedor where ciudad= 'Madrid') m where v.codpro= m ) where p.codpie= v.codpie`
+
+Usando el JOIN...ON:
+~~~sql
+select v.codpie
+from ventas v
+join (select * from proveedor
+where ciudad= 'Madrid') pr
+on v.codpro= pr.codpro;
+~~~
+
+**Ejercicio 3.16 Encuentra la ciudad y los códigos de las piezas suministradas a cualquier
+proyecto por un proveedor que está en la misma ciudad donde está el proyecto.**
+~~~sql
+select p.ciudad, p.codpie from pieza p NATURAL JOIN
+(select codpie from ventas NATURAL JOIN (select s.codpro, j.codpj from proveedor s, proyecto j where j.ciudad= s.ciudad ))
+~~~
+Otras formas:
+
+~~~sql
+select pi.ciudad, pi.codpie
+from pieza pi, ventas v, proveedor pr, proyecto pj
+where v.codpie= pi.codpie and v.codpro= pr.codpro and v.codpj= pj.codpj and pj.ciudad= pr.ciudad;
+
+select pi.ciudad, pi.codpie
+from pieza pi join(select codpie from ventas v, proveedor pr, proyecto pj
+where v.codpro= pr.codpro and v.codpj= pj.codpj and pj.ciudad= pr.ciudad) c
+on pi.codpie= c.codpie;
+~~~
+
+### Ordenación de resultados
+Ya sabemos que en el modelo relacional no existe orden entre las tuplas ni entre los atributos,
+aunque sí es posible indicar al SGBD que ordene los resultados según algún criterio, mediante la
+cláusula `ORDER BY`. Caso de emplearse ésta, el orden por defecto es creciente (ASC).
+
+~~~sql
+SELECT [DISTINCT | ALL] expresion [alias_columna_expresion]
+{,expresion [alias_columna_expresion]}
+FROM [esquema.]tabla|vista [alias_tabla_vista]
+[WHERE <condicion>]
+ORDER BY expresion [ASC | DESC]{,expresion [ASC | DESC]}
+~~~
+
+**Ejemplo 3.13 Encontrar los nombres de proveedores ordenados alfabéticamente.**
+~~~sql
+SQL> Select nompro
+from proveedor
+order by nompro;
+~~~
+
+**Ejercicio 3.18 Listar las ventas ordenadas por cantidad, si algunas ventas coinciden en la
+cantidad se ordenan en función de la fecha de manera descendente.**
+
+`select * from ventas ORDER BY cantidad , fecha DESC;`
+
+### Subconsultas en SQL
+Existen en SQL distintos operadores que permiten operar sobre el resultado de una consulta,
+esto se hace incorporando una subconsulta en la cláusula WHERE de la consulta principal. La
+razón de proceder de esta forma es que se fragmenta la consulta original en varias consultas más
+sencillas, evitando en muchas ocasiones numerosas reuniones.
+~~~sql
+SELECT <expresion>
+FROM tabla
+WHERE <expresion> OPERADOR <SELECT instruccion>
+~~~
+Dónde OPERADOR es cualquiera de los que se presentan en esta sección y, la cláusula
+SELECT a la derecha de OPERADOR puede contener a su vez otra subconsulta, que puede, a su
+vez, anidar un determinado número de subconsultas. El máximo número de anidamientos permi-
+tido depende de cada sistema. Para su resolución el sistema procede resolviendo la subconsulta
+anidada a un mayor nivel de profundidad y sigue resolviendo todas las instrucciones SELECT en
+orden inverso de anidamiento.
+
+#### IN, el operador de pertenencia
+Un uso muy frecuente del operador de pertenencia a un conjunto IN consiste en obtener
+mediante una subconsulta los elementos de dicho conjunto.
+
+**Ejemplo 3.14 Encontrar las piezas suministradas por proveedores de Londres. (Sin usar el
+operador de reunión.)**
+~~~sql
+SQL> Select codpie
+from ventas
+where codpro IN
+(select codpro from proveedor where ciudad = ’Londres’);
+~~~
+
+**Ejercicio 3.19 Mostrar las piezas vendidas por los proveedores de Madrid. (Fragmentando
+la consulta con ayuda del operador IN.) Compara la solución con la del ejercicio 3.15.**
+
+~~~sql
+select nompie from pieza where codpie IN
+  (select codpie from ventas where codpro IN
+    (select codpro from proveedor where ciudad= 'Madrid')
+);
+~~~
+
+**Ejercicio 3.20 Encuentra los proyectos que están en una ciudad donde se fabrica alguna
+pieza.**
+~~~sql
+select nompj from proyecto where codpj IN (
+  select ciudad from pieza
+);
+~~~
+
+**Ejercicio 3.21 Encuentra los códigos de aquellos proyectos que no utilizan ninguna pieza
+roja que esté suministrada por un proveedor de Londres.**
+Una manera es:
+~~~sql
+select distinct codpj from ventas where codpie  not in (select codpie from pieza where color = 'Rojo')
+intersect select codpro from proveedor where ciudad = 'Londres');
+~~~
+Otra que se me ocurre es la siguiente, pero me da error sintáctico:
+~~~sql
+select codpj from ventas MINUS
+select codpj from ventas where codpie in (
+  select codpie from pieza where color= 'Rojo' and codpro in (
+  select codpro from proveedor where ciudad= 'Londres'
+));
+~~~
+
+#### EXISTS, el operador de comprobación de existencia
+Este operador devuelve verdadero cuando existe alguna tupla en la relación sobre la que se
+aplica. El operador EXISTS puede interpretarse también como de comprobación de conjunto no
+vacío.
+
+**Ejemplo 3.15 Encontrar los proveedores que suministran la pieza ’P1’.**
+Usando el operador IN:
+~~~sql
+select nompro from proveedor where codpro in (
+  select codpro from ventas where codpie= 'P1'
+);
+~~~
+Solución que consta en el cuaderno de prácticas:
+~~~sql
+SQL> Select codpro
+from proveedor
+where EXISTS (select * from ventas
+where ventas.codpro = proveedor.codpro
+AND ventas.codpie=’P1’);
+~~~
+
+#### Otros operadores, los comparadores sobre conjuntos
+Cualquiera de los operadores relacionales < | <= | > | >= | <> junto con alguno de los
+cuantificadores [ANY|ALL] pueden servir para conectar una subconsulta con la consulta principal.
+
+**Ejemplo 3.16 Muestra el código de los proveedores cuyo estatus sea igual al del proveedor ’S3’.**
+~~~sql
+SQL> Select codpro
+from proveedor
+where status = (select status from proveedor where codpro=’S3’);
+~~~
+
+**Ejemplo 3.17 Muestra el código de las piezas cuyo peso es mayor que el peso de alguna pieza
+’tornillo’.**
+~~~sql
+select codpie from pieza where peso > ANY (select peso from pieza where nombre like '_ornillo%');
+~~~
+
+**Ejercicio 3.22 Muestra el código de las piezas cuyo peso es mayor que el peso de cualquier
+’tornillo’.**
+~~~sql
+select codpie from pieza where peso > ANY (select peso from pieza where nombre like '_ornillo');
+~~~
+
+**Ejercicio 3.23 Encuentra las piezas con peso máximo. Compara esta solución con la obtenida
+en el ejercicio 3.14**
+Es mucho más simple.
+~~~sql
+select nompie from pieza where peso > ALL (select peso from pieza)
+~~~
+
 
 
 
