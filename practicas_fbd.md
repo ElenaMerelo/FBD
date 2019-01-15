@@ -419,8 +419,7 @@ uno a uno los atributos
 **Ejercicio 3.2 Muestra los suministros realizados (tan solo los códigos de los componentes
 de una venta). ¿Es necesario utilizar DISTINCT?**
 
-`select codpro, codpie, codpj from ventas`. No es necesario emplear distinct dado que
-estamos proyectando columnas que son claves primarias , luego no deberían de aparecer repeticiones.
+`select codpro, codpie, codpj from ventas`. Sí es necesario emplear distinct ya que aunque la tripleta sea única el atributo fecha nos indica que la misma venta puede haberse realizado en distintas fechas.
 
 #### La selección AR en SQL
 Para realizar la selección Algebraica σ en SQL se emplea la cláusula WHERE seguida de una expresión booleana
@@ -455,7 +454,7 @@ El carácter comodín `_` sustituye un sólo carácter.
 
 **Ejercicio 3.5 Mostrar las piezas que contengan la palabra tornillo con la t en
 mayúscula o en minúscula.**
-`select * from pieza where nompie like 'tornillo' or 'Tornillo';`
+`select * from pieza where nompie like 'tornillo' or nompie like 'Tornillo';`
 Otra opción sería:
 `select * from pieza where nompie like '_ornillo'`
 
@@ -510,17 +509,17 @@ las tablas argumento, sin eliminar tuplas duplicadas.
 
 **Ejercicio 3.7 Resolver la consulta del ejemplo 3.8 utilizando el operador ∩.**
 
-`select ciudad from proveedor where status > 2 ∩ select ciudad from pieza where codpie != 'P1';`
+`select ciudad from proveedor where status > 2 ∩ select ciudad from pieza where codpie <> 'P1';`
 
 **Ejercicio 3.8 Encontrar los códigos de aquellos proyectos a los que sólo abastece ’S1’.**
 
-`select codpj from ventas where codpro= 'S1' - select codpj from ventas where codpro != 'S1';`
+`select codpj from ventas where codpro= 'S1' - select codpj from ventas where codpro <> 'S1';`
 
 Esto es, a aquellos proyectos a los que abastece S1 le quitamos los proyectos a los que
 abastecen otros proveedores que no son S1, de manera que si a J2 le abastece S1 y otro
 que no sea S1 no aparece, se quedan sólo los de S1, como queríamos.
 
-Otra opción es: `select codpj from proyecto where not exists (select codpro from proveedor where codpro != 'S1');`, es decir,
+Otra opción es: `select codpj from proyecto where not exists (select codpro from proveedor where codpro <> 'S1');`, es decir,
 seleccionamos el código de los proyectos en los que no exista un proveedor que sea distinto de S1; nos
 quedamos con los códigos de los proyectos en los que el único proveedor es S1, no puede
 existir otro que no sea él.
@@ -571,13 +570,13 @@ select codpro, codpie, codpj from ventas;
 Otra opción sería:
 
 ~~~sql
-select Proveedor.codpro, Pieza.codpie, Proyecto.codpj
-from proveedor, proyecto, pieza, ventas
-where Proveedor.ciudad= Proyecto.ciudad
-and Proyecto.ciudad= Pieza.ciudad
-and Ventas.codpro= Proveedor.codpro
-and Ventas.codpie= Pieza.codpie
-and Ventas.codpj= Proyecto.codpj;
+select s.codpro, p.codpie, j.codpj
+from proveedor s, proyecto j, pieza p, ventas v
+where s.ciudad= j.ciudad
+and j.ciudad= p.ciudad
+and v.codpro= s.codpro
+and v.codpie= p.codpie
+and v.codpj= j.codpj;
 ~~~
 
 También:
@@ -610,7 +609,7 @@ and spj.codpj= j.codpj;
 
 **Ejercicio 3.13 Encontrar parejas de proveedores que no viven en la misma ciudad.**
 
-`select x.codpro, y.codpro from proveedor x, proveedor y where x.ciudad != y.ciudad;`
+`select x.codpro, y.codpro from proveedor x, proveedor y where x.ciudad <> y.ciudad;`
 
 **Ejercicio 3.14 Encuentra las piezas con máximo peso.**
 Para ello cogemos todas las piezas y les quitamos aquellas con mínimo peso:
@@ -645,7 +644,7 @@ ON (s.codpro=v.codpro);
 
 **Ejercicio 3.15 Mostrar las piezas vendidas por los proveedores de Madrid.**
 Si sólo quisiéramos saber el código de las piezas vendidas por los proveedores de Madrid:
-`select codpie from ventas NATURAL JOIN (select * from proveedor where ciudad= 'Madrid')`
+`select codpie from ventas NATURAL JOIN (select codpro from proveedor where ciudad= 'Madrid')`
 
 Sin usar reunión natural:
 `select codpie from ventas v (select * from proveedor where ciudad= 'Madrid') p where v.codpro= p.codpro`
@@ -697,6 +696,10 @@ where exists (
     from proveedor s natural join ventas v
     where j.codpj=v.codpj and s.ciudad!=j.ciudad
 );
+
+select ciudad, codpie
+from
+(select p.ciudad, p.codpro, j.codpj from proveedor p, proyecto j where p.ciudad=j.ciudad) natural join ventas
 ~~~
 
 ### Ordenación de resultados
@@ -799,7 +802,7 @@ select nompie from pieza where codpie IN
 **Ejercicio 3.20 Encuentra los proyectos que están en una ciudad donde se fabrica alguna
 pieza.**
 ~~~sql
-select nompj from proyecto where codpj IN (
+select nompj from proyecto where ciudad IN (
   select ciudad from pieza
 );
 ~~~
@@ -861,7 +864,7 @@ select codpie from pieza where peso > ANY (select peso from pieza where nombre l
 **Ejercicio 3.22 Muestra el código de las piezas cuyo peso es mayor que el peso de cualquier
 ’tornillo’.**
 ~~~sql
-select codpie from pieza where peso > ALL (select peso from pieza where nombre like '_ornillo');
+select codpie from pieza where peso > ANY (select peso from pieza where nombre like '_ornillo');
 ~~~
 
 **Ejercicio 3.23 Encuentra las piezas con peso máximo. Compara esta solución con la obtenida
@@ -871,17 +874,213 @@ Es mucho más simple.
 select nompie from pieza where peso > ALL (select peso from pieza)
 ~~~
 
+### La división AR en SQL
+Ya estamos en condiciones de trasladar el operador ÷ del AR a SQL. Para ello procederemos
+a hacerlo de tres formas diferentes: utilizando una aproximación basada en el Álgebra Relacional,
+otra basada en el Cálculo Relacional y otra usando un enfoque mixto.
+
+**Ejemplo 3.18 Mostrar el código de los proveedores que suministran todas las piezas.**
+
+AR : π cod pro,cod pie (ventas) ÷ π cod pie (pieza)
+
+#### Aproximación usando expresión equivalente en AR
+La división relacional no es un operador primitivo del Álgebra Relacional ya que se puede
+expresar en combinación de los otros operadores primitivos de la siguiente forma:
+Relacion1 ÷ Relacion2 = π A (Relacion1) − π A ((π A (Relacion1) × Relacion2) − Relacion1)
+siendo A = {AtributosRelacion1} − {AtributosRelacion2}
+
+Particularizando a la consulta propuesta la expresión algebraica quedaría así:
+π cod pro (ventas) − π cod pro ((π cod pro (ventas) × π cod pie (pieza)) − π cod pro,cod pie (ventas))
+
+Usando la expresión anterior podríamos expresar la consulta en SQL de la siguiente forma:
+~~~sql
+SQL> (Select codpro from ventas)
+      MINUS
+      (Select codpro
+      From (
+        (Select v.codpro,p.codpie From
+          (Select distinct codpro From ventas) v,
+          (Select codpie From pieza) p
+      )
+      MINUS
+      (Select codpro,codpie From ventas)
+      )
+);
+~~~
+
+#### Aproximación basada en el Cálculo Relacional
+De forma intuitiva, la manera de proceder sería:
+Seleccionar proveedores tal que (
+no exista (una pieza (para la que no exista un suministro de ese proveedor))
+~~~sql
+select s.codpro from proveedor s where not exists (
+  select * from pieza p where not exists (
+    select * from ventas v where v.codpie= p.codpie and v.codpro= p.codpro
+  )
+);
+~~~
+
+#### Aproximación mixta usando not exists y la diferencia relacional
+De forma intuitiva, la manera de proceder sería:
+Seleccionar proveedores tal que
+(el conjunto de todas las piezas)
+menos
+(el conjunto de la piezas suministradas por ese proveedor)
+sea vacío.
+Es decir, no exista ninguna tupla en la diferencia de esos conjuntos.
+~~~sql
+SQL> Select codpro
+from proveedor
+where not exists (
+(select distinct codpie from pieza)
+minus
+(select distinct codpie from ventas where proveedor.codpro=ventas.codpro)
+);
+~~~
+
+**Ejercicio 3.24 Encontrar los códigos de las piezas suministradas a todos los proyectos
+localizados en Londres.**
+En AR sería: pi codpie, codpj (ventas) % pi codpj(sigma ciudad= 'Londres' (proyectos))
+En CRT: {p.codpie / pieza(p) and not exists
+
+Esto es equivalente a encontrar los códigos de las piezas tales que no existe un proyecto de
+Londres que no tenga esa pieza. Hacemos pues: proveedores tales que no existe ( proyecto para el cual no existe
+un suministro de esa pieza a ese proyecto). Con esto obtendríamos los códigos de las piezas suministradas a todos los
+proyectos:
+~~~sql
+select codpie from pieza where not exists (
+select * from proyecto where not exists ( select * from ventas where ventas.codpj= proyecto.codpj and
+ventas.codpie=pieza.codpie));
+~~~
+
+Para especificar que los proyectos han de ser de Londres:
+~~~sql
+select codpie from pieza where not exists (
+select * from proyecto where not exists ( select * from ventas where ventas.codpj= proyecto.codpj and
+ventas.codpie=pieza.codpie) and proyecto.ciudad = 'Londres');
+~~~
+
+Esto es entonces de la forma segunda (aproximación basada en el cálculo relacional). De la forma primera (usando expresión
+equivalente en AR): picodpie,codpj(ventas)%picodpj(proyecto que es de londres). Empleando la formulilla eso sería igual a:
+picodpj(picodpie,codpj(ventas)) - picodpj((picodpj(picodpj,codpie(ventas) x picodpj(proyecto de londres) - picodpj, codpie(ventas)
+
+~~~sql
+select codpie from ventas
+minus
+(select codpie from (
+(select p.codpj, v.codpie from
+(select distinct codpie from ventas) v,
+(select codpj from proyecto where ciudad='Londres') p)
+minus
+(select codpj, codpie from ventas)));
+~~~
+
+Por último, para hacerlo mediante la aproximación mixta usando
+not exists y la diferencia relacional:
+
+tenemos que seleccionar piezas tales que
+(el conjunto de todos los proyectos de londres)
+menos
+(el conjunto de los proyectos de londres a los que se ha suministrado esas
+piezas) es vacío.
+
+~~~sql
+select codpie from pieza where not exists (
+(select distinct codpj from proyecto where ciudad='Londres')
+minus
+(select codpj from ventas
+where codpj IN (select codpj from proyecto where ciudad='Londres')));
+~~~
+
+**Ejercicio 3.25 Encontrar aquellos proveedores que envían piezas procedentes de todas las
+ciudades donde hay un proyecto.**
+
+Nos quedamos con los proveedores tales que no existe una ciudad de la que venga una pieza tal que sea la ciudad de un proyecto.
+~~~sql
+select * from proveedor where not exists(
+  select * from pieza p where not exists(
+    select * from proyecto j NATURAL JOIN ventas where j.ciudad= p.ciudad
+  )
+);
+~~~
+
+### Funciones de agregación
+En ocasiones puede ser interesante resumir la información relativa a un determinado conjunto
+de tuplas. SQL incorpora una serie de funciones estándares. A continuación se presentan algunas
+de ellas:
+SUM(), MIN(), MAX(), AVG(), COUNT(), STDDEV()..., que respectivamente calculan: la
+suma, el mínimo, el máximo, la media, el cardinal y la desviación típica sobre el conjunto
+de valores pasados como argumento de la función. Cuando se usa la cláusula DISTINCT
+como argumento de la función, sólo tendrá en cuenta los valores distintos para realizar la
+correspondiente agregación.
+Vamos a ver ejemplos de utilización de estas funciones en la cláusula SELECT.
+
+**Ejemplo 3.19 Mostrar el máximo, el mínimo y el total de unidades vendidas.**
+~~~sql
+SQL> Select MAX(cantidad), MIN(cantidad), SUM(cantidad) from ventas;
+Comparar y justificar el resultado con el obtenido de:
+SQL> Select MAX(DISTINCT cantidad), MIN(DISTINCT cantidad), SUM(DISTINCT cantidad)
+from ventas;
+~~~
+
+Pueden salir valores distintos solo en la suma, ya que se meten valores repetidos,
+mas en el máximo y el mínimo se sigue quedando con la cantidad mayor o menor, luego
+no influye.
+
+**Ejercicio 3.26 Encontrar el número de envíos con más de 1000 unidades.**
+`select (count *) from ventas where cantidad > 1000);`
+
+**Ejercicio 3.27 Mostrar el máximo peso.**
+`select MAX(peso) from pieza;`
+
+**Ejercicio 3.28 Mostrar el código de la pieza de máximo peso. Compara esta solución con
+las correspondientes de los ejercicios 3.14 y 3.23.**
+`select codpie from pieza where peso = (select MAX(peso) from pieza);`
+
+**Ejercicio 3.29 Comprueba si la siguiente sentencia resuelve el ejercicio anterior.**
+~~~sql
+SQL> select codpie, MAX(peso)
+from pieza;
+~~~
+Da error al ejecutarse ya que estamos usando una función de agrupación junto a un select (codpie) que no es de agrupación.
+
+**Ejercicio 3.30 Muestra los códigos de proveedores que han hecho más de 3 envíos diferentes.**
+~~~sql
+select codpro from proveedor s where (select (count *) from ventas v where v.codpro= s.codpro) > 3;
+~~~
 
 
+#### Formando grupos
+Hasta aquí, las funciones de agregación se han aplicado sobre todas las tuplas que devuelve
+una consulta. Sin embargo es posible realizar un particionado sobre el conjunto de las tuplas
+usando la cláusula GROUP BY. Mediante esta cláusula se indica el atributo o conjunto de atributos
+por cuyos valores se quiere agrupar las tuplas y proceder así a aplicar las funciones de agregación
+a cada uno de los grupos.
+~~~sql
+SELECT [ DISTINCT | ALL]
+expresion [alias_columna_expresion]
+{,expresion [alias_columna_expresion]}
+FROM [esquema.]tabla|vista [alias_tabla_vista]
+[WHERE <condicion>]
+GROUP BY expresion {,expresion}
+~~~
+
+**Ejemplo 3.20 Para cada proveedor, mostrar la cantidad de ventas realizadas y el máximo de
+unidades suministrado en una venta.**
+~~~sql
+SQL> Select codpro, count(*), max(cantidad)
+from ventas
+group by (codpro);
+~~~
+
+**Ejercicio 3.31 Mostrar la media de las cantidades vendidas por cada código de pieza junto
+con su nombre.**
 
 
+**Ejercicio 3.32 Encontrar la cantidad media de ventas de la pieza ’P1’ realizadas por cada
+proveedor.**
 
-
-
-
-
-
-
+**Ejercicio 3.33 Encontrar la cantidad total de cada pieza enviada a cada proyecto.**
 
 
 
