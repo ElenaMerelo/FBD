@@ -15,8 +15,10 @@ Otra alternativa para trabajar es editar y lanzar ficheros de comandos que se
 pueden guardar y volver a relanzar desde SQL*Plus. Estos ficheros de comandos SQL se pueden
 crear con cualquier editor (conviene dejarlos en un directorio de Bases de Datos preparado a tal
 efecto), que deberían tener extensión .sql. Para ello tenemos que hacer:
+
 1. `edit nombre-de-fichero` siendo éste un fichero no creado previamente y
 escribiendo en él antes de abandonar el editor.
+
 2. `save nombre-de-fichero`. De esta forma se copia el contenido del buffer al
 fichero en cuestión.
 
@@ -35,9 +37,9 @@ CREATE TABLE prueba2(
 cad1 char(8),
 num int);
 ~~~
-a continuación ejecutar el fichero. Mediante esta sentencia hemos creado una tabla vacía
+a continuación ejecutar el fichero.** Mediante esta sentencia hemos creado una tabla vacía
 llamada prueba2 con dos atributos, cad1 y num. Para comprobarlo, es necesario consultar el
-catálogo de la base de datos o ejecutar un comando describe, como veremos a continuación.**
+catálogo de la base de datos o ejecutar un comando describe, como veremos a continuación.
 
 Para ello desde sqlplus ponemos `edit pp.sql`, se abre dicho archivo, escribimos lo
 anterior y lo guardamos con `save pp.sql`. Finalmente, para ejecutarlo simplemente
@@ -68,7 +70,7 @@ REFERENCES nombre-tabla(nombre-atributo, ...),]
 );
 ~~~
 Además, cabe destacar que cuando la clave primaria, la clave candidata o la clave externa
-está formada por un solo atributo, las palabras reservadas `PRIMARY KEY`, `UNIQUE` y `REFERENCES`, respectivamente, se podrán incluir a continuación de la definición del atributo
+están formadas por un solo atributo, las palabras reservadas `PRIMARY KEY`, `UNIQUE` y `REFERENCES`, respectivamente, se podrán incluir a continuación de la definición del atributo
 correspondiente, tal y como se muestra a continuación:
 ~~~sql
 CREATE TABLE nombre-tabla1(
@@ -212,7 +214,7 @@ contenido de las mismas ejecutando la sentencia de consulta:
 `SQL> SELECT * FROM nombre-tabla;`
 La lista de atributos entre la cláusula SELECT y la cláusula FROM equivale en SQL a la
 operación de proyección de Álgebra Relacional. En este caso particular, el ∗ equivale a proyectar
-sobre todos los atributos de las tablas relacionadas en al cláusula FROM. Para proyectar campos
+sobre todos los atributos de las tablas relacionadas en la cláusula FROM. Para proyectar campos
 individuales, se debe ejecutar la siguiente sentencia:
 `SQL> SELECT campo1, campo2, .... FROM nombre-tabla;`
 Para conocer qué tablas tenemos creadas hasta este momento, podemos consultar una vista
@@ -239,8 +241,9 @@ SET nombre_atributo = ’nuevovalor’
 ~~~
 Esta sentencia modifica la/s tupla/s que se ajustan al criterio especificado en la cláusula
 WHERE. Hay que destacar que [] indica opcionalidad. Así, se puede modificar un atributo o
-más de un atributo simultáneamente. La sintaxis de la cláusula WHERE se basa en la expresión
-recogida en <condicion>, una expresión es lógica.
+más de un atributo simultáneamente. La sintaxis de la cláusula WHERE se basa en la expresión lógica
+recogida en <condicion>.
+
 **Ejemplo 2.4 Ejecuta la sentencia UPDATE sobre la tabla plantilla y cambia el estado civil de
 Juan a divorciado.**
 ~~~sql
@@ -293,7 +296,7 @@ WHERE nombre=’Juan’;
 ~~~
 
 Aunque los datos de fecha podrían representarse mediante los tipos VARCHAR y NUMBER,
-el tipo DATE ofrece, además, funciones específicas para su manejo que tienen en cuenta su
+el tipo DATE ofrece funciones específicas para su manejo que tienen en cuenta su
 semántica.
 ##### Introducción de fechas mediante la función TO_DATE
 Con esta función se genera un valor de tipo date a partir del valor suministrado por la
@@ -308,7 +311,7 @@ TO_DATE(’22/10/2005’,’dd/mm/yyyy’),null);
 **Ejemplo 2.7** `SQL> select TO_CHAR(fechaalta,’dd-mon-yyyy’) from plantilla;`
 
 Si se omite la función TO_CHAR en la sentencia select, el formato aplicado será el que haya
-por defecto.
+por defecto. Esta sentencia devuelve en el formato día-mes-año las fechasaltas que constan en plantilla.
 
 **Ejercicio 2.12 Actualizar la fecha del proveedor S5 al año 2005’**
 ~~~sql
@@ -327,7 +330,7 @@ donde el texto que se quiere incluir como parte de la fecha debe ir entre comill
 
 > EXPLICACIÓN PROFESOR
 select == pi (proyección). Si ponemos select distinct no pone las tablas duplicadas
-from == x (poducto cartesiano)
+from == X (poducto cartesiano)
 where == sigma (selección)
 
 >Ejemplo: `select codpro from proveedor where ciudad= 'Londres'` para ver los proveedores que son de Londres.
@@ -343,7 +346,8 @@ Si no queremos proyectar ponemos asterisco: select \*.
 ascendentemente.
 
 > Tipo de dato fecha: `to_date(cadena, formato)` por ejemplo cadena= '22/07/2018', formato= 'dd/mm/yyyy', pasa la fecha a un
-formato que él entiende. `to_char(fecha, formato)` hace lo contrario.
+formato que él entiende. `to_char(fecha, formato)` hace lo contrario, esto es, coge la fecha como él la tiene representada
+internamente y la muestra poniéndola en el formato especificado, para que nosotros podamos entenderla.
 
 > `select sysdate from dual` nos la fecha del día en el formato por defecto del sistema. `select to_char(sysdate, 'yyyy') from dual`
 dice el año en el que estamos.
@@ -361,7 +365,6 @@ a comparar fechas, lo hacemos en el dominio de las fechas.
 veces como tuplas haya.
 
 > `select cantidad*3-5 from ventas` multiplica cantidad de la tabla ventas por 3, le resta 5.
-
 
 
 ### La sentencia de consulta SELECT
@@ -420,12 +423,9 @@ de una venta). ¿Es necesario utilizar DISTINCT?**
 estamos proyectando columnas que son claves primarias , luego no deberían de aparecer repeticiones.
 
 #### La selección AR en SQL
-Para realizar la selección Algebráica σ en SQL se emplea la cláusula WHERE seguida de
-<condicion>, aunque siempre será necesario especificar la cláusula SELECT de la instrucción
-de consulta. <condicion> es una expresión booleana que implica cualquiera de los atributos de
-la tabla que figura en la cláusula FROM de la instrucción. Los operadores que pueden intervenir
-en esta expresión son cualesquiera de los ya presentados en la Tabla 2.2 y algunos adicionales
-que mostramos en esta sección.
+Para realizar la selección Algebraica σ en SQL se emplea la cláusula WHERE seguida de una expresión booleana
+<condición>, aunque siempre será necesario especificar la cláusula SELECT de la instrucción
+de consulta.
 
 **Ejemplo 3.3 Muestra los códigos de los proveedores que suministran al proyecto ’J1’.**
 
@@ -580,6 +580,14 @@ and Ventas.codpie= Pieza.codpie
 and Ventas.codpj= Proyecto.codpj;
 ~~~
 
+También:
+
+~~~sql
+select s.codpro, p.codpie, j.codpj from proveedor s, proyecto j, pieza p where
+s.ciudad= p.ciudad and p.ciudad= j.ciudad and EXISTS (select codpro, codpj, codpie from ventas v where
+v.codpro= s.codpro and v.codpie= p.codpie and v.codpj= j.codpj )
+~~~
+
 #### El renombramiento o alias en SQL
 El empleo de alias puede ser útil para abreviar texto cuando es necesario prefijar atributos
 para eliminar ambigÜedades, sin embargo, es estrictamente necesario cuando se hace un producto
@@ -619,9 +627,10 @@ intervinientes, si no coincidieran en tipo, devolvería error.
 
 **Ejemplo 3.12 Mostrar los nombres de proveedores y cantidad de aquellos que han realizado
 alguna venta en cantidad superior a 800 unidades.**
-`select nompro, cantidad from proveedor NATURAL JOIN (select * from ventas where cantidad >= 800 NATURAL JOIN ventas where cantidad >= 800`
+`select nompro, cantidad from proveedor NATURAL JOIN (select * from ventas where cantidad >= 800)`
 Si no se hubiera hecho con reunión natural habría sido:
-`select nompro, cantidad from proveedor s (select codpro from ventas where cantidad >= 800) y where s.codpro= y.codpro`
+`select nompro, cantidad from proveedor s (select codpro from ventas where cantidad >= 800) y where s.codpro= y.codpro`.
+O: `select nompro, cantida from proveedor s, ventas v where v.cantidad >= 800 and s.codpro= v.codpro`
 
 Observe el resultado que se obtiene de la reunión natural cuando se proyecta sobre todos
 los atributos. Si se quiere reunir en base a campos que no tienen el mismo nombre, se pueden
@@ -680,6 +689,14 @@ select pi.ciudad, pi.codpie
 from pieza pi join(select codpie from ventas v, proveedor pr, proyecto pj
 where v.codpro= pr.codpro and v.codpj= pj.codpj and pj.ciudad= pr.ciudad) c
 on pi.codpie= c.codpie;
+
+select distinct nompj
+from proyecto j
+where exists (
+    select *
+    from proveedor s natural join ventas v
+    where j.codpj=v.codpj and s.ciudad!=j.ciudad
+);
 ~~~
 
 ### Ordenación de resultados
@@ -737,6 +754,38 @@ where codpro IN
 (select codpro from proveedor where ciudad = ’Londres’);
 ~~~
 
+Si quisiéramos saberlo todo de la pieza:
+
+~~~sql
+select * from pieza where codpie in (
+  select codpie from ventas where codpro in(
+    select codpro from proveedor where ciudad= 'Londres'
+  )
+)
+~~~
+
+Haciéndolo con el equivalente a producto cartesiano:
+
+~~~sql
+select * from pieza p, ventas v, proveedor s where p.codpie= v.codpie and s.codpro= v.codpro
+and s.ciudad= 'Londres';
+~~~
+
+Con reunión natural:
+
+~~~sql
+select * from pieza NATURAL JOIN (select codpie from ventas NATURAL JOIN (select codpro from proveedor s where s.ciudad= 'Londres' ));
+~~~
+
+Y usando JOIN...ON:
+
+~~~sql
+select * from pieza p JOIN (
+  select codpie from ventas v JOIN (
+    select codpro from proveedor s where s.ciudad= 'Londres'
+  ) ON s.codpro= v.codpro) ON p.codpie= v.codpie);
+~~~
+
 **Ejercicio 3.19 Mostrar las piezas vendidas por los proveedores de Madrid. (Fragmentando
 la consulta con ayuda del operador IN.) Compara la solución con la del ejercicio 3.15.**
 
@@ -762,7 +811,7 @@ Una manera es:
 select distinct codpj from ventas where codpie  not in (select codpie from pieza where color = 'Rojo')
 intersect select codpro from proveedor where ciudad = 'Londres');
 ~~~
-Otra que se me ocurre es la siguiente, pero me da error sintáctico:
+Otra que se me ocurre es la siguiente:
 ~~~sql
 select codpj from ventas MINUS
 select codpj from ventas where codpie in (
@@ -796,7 +845,7 @@ AND ventas.codpie=’P1’);
 Cualquiera de los operadores relacionales < | <= | > | >= | <> junto con alguno de los
 cuantificadores [ANY|ALL] pueden servir para conectar una subconsulta con la consulta principal.
 
-**Ejemplo 3.16 Muestra el código de los proveedores cuyo estatus sea igual al del proveedor ’S3’.**
+**Ejemplo 3.16 Muestra el código de los proveedores cuyo status sea igual al del proveedor ’S3’.**
 ~~~sql
 SQL> Select codpro
 from proveedor
@@ -812,7 +861,7 @@ select codpie from pieza where peso > ANY (select peso from pieza where nombre l
 **Ejercicio 3.22 Muestra el código de las piezas cuyo peso es mayor que el peso de cualquier
 ’tornillo’.**
 ~~~sql
-select codpie from pieza where peso > ANY (select peso from pieza where nombre like '_ornillo');
+select codpie from pieza where peso > ALL (select peso from pieza where nombre like '_ornillo');
 ~~~
 
 **Ejercicio 3.23 Encuentra las piezas con peso máximo. Compara esta solución con la obtenida
