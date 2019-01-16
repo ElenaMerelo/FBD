@@ -262,9 +262,9 @@ where dni= '12345678';
 
 #### Borrado de tuplas
 La instrucción DELETE se utiliza para eliminar tuplas de una tabla. Las tuplas que se
-eliminan son aquellas que hacen cierta la expresión <condicion>. Su sintaxis es la siguiente:
-`DELETE [FROM] nombre_tabla [WHERE <condicion>];`
-Donde [] nuevamente indica opcionalidad y condicion es cualquier expresión lógica.
+eliminan son aquellas que hacen cierta la expresión <condición>. Su sintaxis es la siguiente:
+`DELETE [FROM] nombre_tabla [WHERE <condición>];`
+Donde [] nuevamente indica opcionalidad y condición es cualquier expresión lógica.
 
 **Ejemplo 2.5 Borra todas las tuplas de la tabla prueba2.**
 `SQL> DELETE FROM prueba2;`
@@ -311,7 +311,7 @@ TO_DATE(’22/10/2005’,’dd/mm/yyyy’),null);
 **Ejemplo 2.7** `SQL> select TO_CHAR(fechaalta,’dd-mon-yyyy’) from plantilla;`
 
 Si se omite la función TO_CHAR en la sentencia select, el formato aplicado será el que haya
-por defecto. Esta sentencia devuelve en el formato día-mes-año las fechasaltas que constan en plantilla.
+por defecto. Esta sentencia devuelve en el formato día-mes-año las fechas de alta que constan en plantilla.
 
 **Ejercicio 2.12 Actualizar la fecha del proveedor S5 al año 2005’**
 ~~~sql
@@ -327,45 +327,6 @@ SQL> select codpro,codpie,
 to_char(fecha,’"Dia" day,dd/mm/yy’) from ventas;
 ~~~
 donde el texto que se quiere incluir como parte de la fecha debe ir entre comillas dobles.
-
-> EXPLICACIÓN PROFESOR
-select == pi (proyección). Si ponemos select distinct no pone las tablas duplicadas
-from == X (poducto cartesiano)
-where == sigma (selección)
-
->Ejemplo: `select codpro from proveedor where ciudad= 'Londres'` para ver los proveedores que son de Londres.
-
->Para conjuntos: union (all si queremos que nos muestre los elementos que están más de una vez), minus, intersect, select.
-Si no queremos proyectar ponemos asterisco: select \*.
-
-> `select * from ventas v, ventas v2 where v.codpro= 'S5'`
-
-> `select * from proveedor order by ciudad desc` para dar un criterio de ordenación a las tuplas, si las queremos en orden por ciudad descendente.
-
-> `select * from proveedor order by ciudad, status;` ordena por ciudad, si hay igualdad mira status. Por defecto ordena
-ascendentemente.
-
-> Tipo de dato fecha: `to_date(cadena, formato)` por ejemplo cadena= '22/07/2018', formato= 'dd/mm/yyyy', pasa la fecha a un
-formato que él entiende. `to_char(fecha, formato)` hace lo contrario, esto es, coge la fecha como él la tiene representada
-internamente y la muestra poniéndola en el formato especificado, para que nosotros podamos entenderla.
-
-> `select sysdate from dual` nos la fecha del día en el formato por defecto del sistema. `select to_char(sysdate, 'yyyy') from dual`
-dice el año en el que estamos.
-
-> Es muy habitual que cometamos el error de comparar en el dominio de las cadenas, y eso a veces puede no funcionar. Si vamos
-a comparar fechas, lo hacemos en el dominio de las fechas.
-
-> `select sysdate-to_date('23/06/1998' 'DD/MM/YYYY') from dual;` dice los días que han pasado desde que nací.
-
-> `select (sysdate-to_date('23/06/1998', 'dd/mm/yyyy'))/365 from dual;` dice los años que tengo.
-
-> sql convierte la aritmética de fechas en aritmética real.
-
-> `select sysdate from ventas` por cada tupla de ventas me saca lo que he puesto en el select, me repite la fecha del sistema tantas
-veces como tuplas haya.
-
-> `select cantidad*3-5 from ventas` multiplica cantidad de la tabla ventas por 3, le resta 5.
-
 
 ### La sentencia de consulta SELECT
 La sentencia SELECT permite consultar las tablas seleccionando datos en tuplas y columnas
@@ -428,7 +389,7 @@ de consulta.
 
 **Ejemplo 3.3 Muestra los códigos de los proveedores que suministran al proyecto ’J1’.**
 
-AR : π cod pro (σ cod p j= 0 J1 0 (Ventas))
+AR : π cod pro (σ codpj= 'J1' (Ventas))
 
 `SQL> Select codpro from ventas where codpj=’J1’;`
 
@@ -615,7 +576,7 @@ and spj.codpj= j.codpj;
 Para ello cogemos todas las piezas y les quitamos aquellas con mínimo peso:
 `select nompie, codpie, peso from pieza MINUS select x.nompie, x.codpie, x.peso from pieza x, pieza y where x.peso < y.peso`
 Otra opción, usando las funciones de agregación que veremos más adelante, es:
-`select * from pieza where peso >= ALL (select peso from pieza);`
+`select * from pieza where peso >= ALL (select peso from pieza);` o `select MAX(peso) from pieza;`
 
 #### La equi-reunión y la reunión natural AR en SQL
 Llegado este punto, disponemos de todos los elementos SQL para expresar el operador
@@ -628,8 +589,8 @@ intervinientes, si no coincidieran en tipo, devolvería error.
 alguna venta en cantidad superior a 800 unidades.**
 `select nompro, cantidad from proveedor NATURAL JOIN (select * from ventas where cantidad >= 800)`
 Si no se hubiera hecho con reunión natural habría sido:
-`select nompro, cantidad from proveedor s (select codpro from ventas where cantidad >= 800) y where s.codpro= y.codpro`.
-O: `select nompro, cantida from proveedor s, ventas v where v.cantidad >= 800 and s.codpro= v.codpro`
+`select nompro, cantidad from proveedor s, (select codpro from ventas where cantidad >= 800) y where s.codpro= y.codpro`.
+O: `select nompro, cantidad from proveedor s, ventas v where v.cantidad >= 800 and s.codpro= v.codpro`
 
 Observe el resultado que se obtiene de la reunión natural cuando se proyecta sobre todos
 los atributos. Si se quiere reunir en base a campos que no tienen el mismo nombre, se pueden
@@ -647,7 +608,7 @@ Si sólo quisiéramos saber el código de las piezas vendidas por los proveedore
 `select codpie from ventas NATURAL JOIN (select codpro from proveedor where ciudad= 'Madrid')`
 
 Sin usar reunión natural:
-`select codpie from ventas v (select * from proveedor where ciudad= 'Madrid') p where v.codpro= p.codpro`
+`select codpie from ventas v, (select * from proveedor where ciudad= 'Madrid') p where v.codpro= p.codpro`
 
 Equivalente a:
 ~~~sql
@@ -688,14 +649,6 @@ select pi.ciudad, pi.codpie
 from pieza pi join(select codpie from ventas v, proveedor pr, proyecto pj
 where v.codpro= pr.codpro and v.codpj= pj.codpj and pj.ciudad= pr.ciudad) c
 on pi.codpie= c.codpie;
-
-select distinct nompj
-from proyecto j
-where exists (
-    select *
-    from proveedor s natural join ventas v
-    where j.codpj=v.codpj and s.ciudad!=j.ciudad
-);
 
 select ciudad, codpie
 from
@@ -835,7 +788,7 @@ select nompro from proveedor where codpro in (
   select codpro from ventas where codpie= 'P1'
 );
 ~~~
-Solución que consta en el cuaderno de prácticas:
+Solución que consta en el cuaderno de prácticas, usando el operador exists:
 ~~~sql
 SQL> Select codpro
 from proveedor
@@ -864,7 +817,7 @@ select codpie from pieza where peso > ANY (select peso from pieza where nombre l
 **Ejercicio 3.22 Muestra el código de las piezas cuyo peso es mayor que el peso de cualquier
 ’tornillo’.**
 ~~~sql
-select codpie from pieza where peso > ANY (select peso from pieza where nombre like '_ornillo');
+select codpie from pieza where peso > ALL (select peso from pieza where nombre like '_ornillo');
 ~~~
 
 **Ejercicio 3.23 Encuentra las piezas con peso máximo. Compara esta solución con la obtenida
@@ -909,7 +862,7 @@ SQL> (Select codpro from ventas)
 ~~~
 
 #### Aproximación basada en el Cálculo Relacional
-De forma intuitiva, la manera de proceder sería:
+De forma intuitiva, la manera de proceder para obtener el código de los proveedores que suministran todas las piezas sería:
 Seleccionar proveedores tal que (
 no exista (una pieza (para la que no exista un suministro de ese proveedor))
 ~~~sql
@@ -1075,12 +1028,496 @@ group by (codpro);
 
 **Ejercicio 3.31 Mostrar la media de las cantidades vendidas por cada código de pieza junto
 con su nombre.**
+Haciéndolo con reunión natural, join on y producto cartesiano:
+~~~sql
+select codpie, nompie, AVG(cantidad)
+from ventas natural join pieza
+group by codpie, nompie;
 
+select AVG(cantidad), v.codpie, nompie from ventas v JOIN (select nompie, codpie from pieza p) ON p.codpie= v.codpie group by codpie, nompie;
+
+select AVG(cantidad), v.codpie, nompie from ventas v, pieza p where p.codpie= v.codpie group by codpie, nompie;
+
+~~~
 
 **Ejercicio 3.32 Encontrar la cantidad media de ventas de la pieza ’P1’ realizadas por cada
 proveedor.**
+~~~sql
+select AVG(cantidad) from ventas where codpie= 'P1' group by codpro;
+~~~
 
 **Ejercicio 3.33 Encontrar la cantidad total de cada pieza enviada a cada proyecto.**
+~~~sql
+select SUM(cantidad), codpie from ventas group by codpro;
+~~~
+
+#### Seleccionando grupos
+Hasta ahora cuando se definían los grupos, todos formaban parte del resultado. Sin
+embargo, es posible establecer condiciones sobre los grupos mediante la cláusula HAVING junto
+con una <condición>, de forma parecida a cómo se hace con la cláusula WHERE sobre tuplas.
+Esto es, la condición se aplica sobre los grupos y determina que grupos aparecen como resultado
+de la consulta. La <condición> a satisfacer por lo grupos se elabora utilizando alguna de las
+funciones de agregación vistas y componiendo una expresión booleana con los operadores ya
+conocidos.
+~~~sql
+SELECT [ DISTINCT | ALL]
+expresion [alias_columna_expresion]
+{,expresion [alias_columna_expresion]}
+FROM [esquema.]tabla|vista [alias_tabla_vista]
+[WHERE <condicion>]
+GROUP BY expresion {,expresion}
+[HAVING <condicion>]
+~~~
+
+**Ejemplo 3.21 Hallar la cantidad media de ventas realizadas por cada proveedor, indicando
+solamente los códigos de proveedores que han hecho más de 3 ventas.**
+~~~sql
+select AVG(cantidad) from ventas group by codpro having count(*) > 3;
+~~~
+
+Para integrar los nuevos conceptos de selección de grupos con los antiguos de selección de
+tuplas vamos a plantear una consulta donde se combinan las cláusulas where y having.
+
+**Ejemplo 3.22 Mostrar la media de unidades vendidas de la pieza ’P1’ realizadas por cada
+proveedor, indicando solamente la información de aquellos proveedores que han hecho entre 2 y
+10 ventas.**
+~~~sql
+select codpro, codpie, AVG(cantidad) from ventas where
+codpie='P1' group by
+codpro, codpie having
+count(*) between 2 and 10;
+~~~
+
+**Ejemplo 3.23 Encuentra los nombres de proyectos y cantidad media de piezas que recibe por
+proveedor.**
+
+Haciéndolo con reunión natural, producto cartesiano y join on respectivamente:
+~~~sql
+select nompj, avg(cantidad), codpro from ventas natural join proyecto group by codpro, nompj;
+
+select nompj, avg(cantidad), codpro from ventas v, proyecto j where v.codpj= j.codpj group by codpro, nompj;
+
+select nompj, avg(cantidad), codpro from ventas v join(select * from proyecto j) on v.codpj= j.codpj group by codpro, nompj;
+~~~
+
+En el cuaderno de prácticas la solución que da es:
+~~~sql
+SQL> Select v.codpro, v.codpj, j.nompj, AVG(v.cantidad)
+from ventas v, proyecto j
+where v.codpj=j.codpj
+group by (v.codpj, j.nompj,v.codpro);
+~~~
+
+**Ejercicio 3.34 Comprueba si es correcta la solución anterior.**
+Primero que solo nos piden nompj y avg, luego lo demás podríamos quitarlo, y nompj, cantidad
+no dan lugar a ambiguedades, por lo que no haría falta el uso de alias, ídem con el codpro, pero por lo demás es correcta.
+
+**Ejercicio 3.35 Mostrar los nombres de proveedores tales que el total de sus ventas superen
+la cantidad de 1000 unidades.**
+~~~sql
+select nompro from proveedor NATURAL JOIN ventas where sum(cantidad) > 1000;
+~~~
+
+Otra opción:
+~~~sql
+select nompro from proveedor p NATURAL JOIN ventas v group by (p.codpro, nompro) having sum(cantidad) > 1000;
+~~~
+
+**IMPORTANTE**: todos los campos que usemos en el _select_, deben aparecer en el _group by_, en caso contrario, dará error.
+
+#### Subconsultas en la cláusula HAVING
+Ya hemos visto cómo una consulta compleja se puede fragmentar en varias subconsultas
+anidadas introduciendo una subconsulta en la cláusula WHERE y combinando los resultados. No
+es éste el único lugar dónde se pueden utilizar subconsultas, también puede hacerse en la cláusula
+HAVING.
+
+**Ejemplo 3.24 Mostrar el proveedor que más ha vendido en total.**
+~~~sql
+SQL> Select codpro, sum(cantidad)
+from ventas
+group by codpro
+having sum(cantidad) = (select max(sum(V1.cantidad))
+from ventas V1
+group by V1.codpro);
+~~~
+
+**Ejercicio 3.36 Mostrar para cada pieza la máxima cantidad vendida.**
+~~~sql
+select nompie, v.codpie, MAX(cantidad) from pieza natural join ventas v group by (codpie, nompie);
+
+select codpie, MAX(cantidad) from ventas group by codpie;
+~~~
+
+### Consultas adicionales
+#### Consultas con el tipo DATE
+> Uso de fechas en la cláusula SELECT.
+
+Para ello utilizamos la función de conversión to_char(), para la conversión de una fecha a una cadena
+en un formato determinado por los parámetros que están en la tabla 2.3 del cuaderno.
+
+**Ejemplo 3.25 Lista las fechas de las ventas en un formato día, mes y año con 4 dígitos.**
+`select to_date(fecha, 'dd-mm-yyyy') from ventas;`
+
+>Uso de fechas en la cláusula WHERE.
+
+Hacemos uso de la función de conversión to_date() para hacer comparaciones entre fechas
+en formato interno.
+
+**Ejemplo 3.26 Encontrar las ventas realizadas entre el 1 de enero de 2002 y el 31 de diciembre de 2004.**
+~~~sql
+select * from ventas where
+fecha between to_date('dd-mm-yyyy', 01-01-2002) and
+fecha < to_date('dd-mm-yyyy', 31-12-2004);
+~~~
+
+**Ejercicio 3.37 Comprueba que no funciona correctamente si las comparaciones de fechas se
+hacen con cadenas.**
+
+**Ejemplo 3.27 Mostrar las piezas que nunca fueron suministradas después del año 2001.**
+La primera opción que se me ocurre es seleccionar las piezas cuyo código no está en una venta posterior a 2001,
+en la segunda lo pongo expresado de otra manera, pero hace lo mismo: selecciona piezas
+cuyo código está en una venta anterior a 2001, y por último otra forma es seleccionar las piezas para
+las que no existe una venta que tenga su código y se posterior a 2001.
+~~~sql
+select * from pieza where codpie not in (
+  select codpie from ventas where fecha > to_date('yyyy', 2001)
+);
+
+select * from pieza where codpie in(
+  select codpie from ventas where fecha < to_date('yyyy', 2001)
+);
+
+select * from pieza p where not exists (
+  select * from ventas v where v.codpie= p.codpie and fecha > to_date('yyyy', 2001)
+);
+~~~
+
+Como está resuelto en el cuaderno:
+~~~sql
+SQL> (select distinct codpie from pieza)
+minus
+(select distinct codpie from ventas
+where to_number(to_char(fecha,’YYYY’)) > 2001);
+~~~
+
+ó
+
+~~~sql
+select p.codpie from pieza p where not exists
+(select * from ventas v where to_number(to_char(v.fecha,’YYYY’)) > 2001
+and v.codpie=p.codpie);
+~~~
+
+> Uso de fechas en la cláusula GROUP BY.
+
+**Ejemplo 3.28 Agrupar los suministros de la tabla de ventas por años y sumar las cantidades
+totales anuales.**
+~~~sql
+SQL> Select to_char(fecha,’YYYY’), SUM(cantidad)
+from ventas
+group by to_char(fecha,’YYYY’);
+~~~
+
+**Ejercicio 3.38 Encontrar la media de productos suministrados cada mes.**
+~~~SQL
+select AVG(cantidad), to_char(fecha, 'MM') from ventas group by to_char(fecha, 'MM');
+~~~
+
+#### Otras consultas sobre el catálogo
+Ya podemos consultar con cierto detalle algunas de las vistas del catálogo.
+
+**Ejemplo 3.29 Mostrar la información de todos los usuarios del sistema; la vista que nos
+interesa es ALL_USERS.**
+~~~sql
+SQL> Select *
+from ALL_USERS;
+~~~
+
+Puede interesar primero ver el esquema de tal vista mediante `DESCRIBE ALL_USERS` para hacer
+una proyección más selectiva.
+
+**Ejemplo 3.30 Queremos saber qué índices tenemos definidos sobre nuestras tablas, pero en
+esta ocasión vamos a consultar al propio catálogo para que nos muestre algunas de las vistas que
+contiene (así ya no necesitamos chuleta).**
+~~~sql
+SQL> DESCRIBE DICTIONARY;
+SQL> select * from DICTIONARY
+where table_name like ’%INDEX%’
+~~~
+
+**Ejercicio 3.39 ¿ Cuál es el nombre de la vista que tienes que consultar y qué campos te
+pueden interesar?**
+
+**Ejercicio 3.40 Muestra las tablas ventas a las que tienes acceso de consulta junto con el
+nombre del propietario y su número de identificación en el sistema.**
+
+**Ejercicio 3.41 Muestra todos tus objetos creados en el sistema. ¿Hay algo más que tablas?**
+
+Estos ejercicios habría que hacerlos en el ordenador del aula.
+
+
+#### Ejercicios adicionales
+
+**Ejercicio 3.42 Mostrar los códigos de aquellos proveedores que hayan superado las ventas
+totales realizadas por el proveedor ’S1’.**
+~~~sql
+select codpro from ventas where sum(count(*)) > sum(select (count *) from ventas where codpro= 'S1');
+~~~
+
+**Ejercicio 3.43 Mostrar los mejores proveedores, entendiéndose como los que tienen mayores
+cantidades totales.**
+~~~sql
+select * from proveedor where codpro in (
+  select codpro from ventas where cantidad= max(sum(cantidad))
+);
+~~~
+
+**Ejercicio 3.44 Mostrar los proveedores que venden piezas a todas las ciudades de los
+proyectos a los que suministra ’S3’, sin incluirlo.**
+Para ello mostramos los proveedores para los que no existe una pieza que vendan a una ciudad que no
+sea de un proyecto al que suministra s3:
+~~~sql
+select * from proveedor s where s.codpro != 'S3' and s.codpro in (
+  select v.codpro from ventas v where not exists(
+    select * from pieza p where not exists(
+      select j.ciudad from proyecto j where j.codpj= v.codpj and p.codpie= v.codpie and v.codpro= 'S3'
+    )
+  )
+);
+~~~
+
+**Ejercicio 3.45 Encontrar aquellos proveedores que hayan hecho al menos diez pedidos.**
+~~~sql
+select * from proveedor where count(*) >= 10;
+~~~
+Usando el group by y having:
+~~~sql
+select codpro
+from ventas
+group by codpro
+having count(*) >= 10;
+~~~
+
+**Ejercicio 3.46 Encontrar aquellos proveedores que venden todas las piezas suministradas
+por S1.**
+~~~sql
+select * from proveedor t where not exists(
+  select * from pieza p where exists(
+    select * from ventas v where v.codpie= p.codpie and v.codpro='S1'
+  )
+  AND
+  not exists (select * from ventas v where v.codpie=p.codpie and v.codpro=t.codpro)
+);
+~~~
+
+Así nos quedamos con los proveedores para los que no existe una pieza suministrada por S1 que sea suministrada por ese proveedor,
+no existe una pieza suministrada por S1 que no sea vendida por ellos.
+
+**Ejercicio 3.47 Encontrar la cantidad total de piezas que ha vendido cada proveedor que
+cumple la condición de vender todas las piezas suministradas por S1.**
+~~~sql
+select codpro, sum(cantidad) from ventas where codpro in (
+  select * from proveedor t where not exists(
+    select * from pieza p where exists(
+      select * from ventas v where v.codpie= p.codpie and v.codpro='S1'
+    )
+    AND
+    not exists (select * from ventas v where v.codpie=p.codpie and v.codpro=t.codpro)
+  )
+) group by codpro;
+~~~
+Es coger la consulta de antes y calcular la suma total y quedarnos con el codpro.
+
+**Ejercicio 3.48 Encontrar qué proyectos están suministrados por todos lo proveedores que
+suministran la pieza P3.**
+
+
+Ejercicio 3.49 Encontrar la cantidad media de piezas suministrada a aquellos proveedores
+que venden la pieza P3.
+
+Ejercicio 3.50 Queremos saber los nombres de tus índices y sobre qué tablas están montados,
+indica además su propietario.
+
+Ejercicio 3.51 Implementar el comando DESCRIBE para tu tabla ventas a través de una
+consulta a las vistas del catálogo.
+
+Ejercicio 3.52 Mostrar para cada proveedor la media de productos suministrados cada año. 
+Ejercicio 3.53 Encontrar todos los proveedores que venden una pieza roja. 
+Ejercicio 3.54 Encontrar todos los proveedores que venden todas las piezas rojas. 
+Ejercicio 3.55 Encontrar todos los proveedores tales que todas las piezas que venden son
+rojas.
+
+Ejercicio 3.56 Encontrar el nombre de aquellos proveedores que venden más de una pieza
+roja.
+
+Ejercicio 3.57 Encontrar todos los proveedores que vendiendo todas las piezas rojas cumplen
+la condición de que todas sus ventas son de más de 10 unidades.
+
+Ejercicio 3.58 Coloca el status igual a 1 a aquellos proveedores que sĺo suministran la pieza
+P1.
+
+Ejercicio 3.59 Encuentra, de entre las piezas que no se han vendido en septiembre de 2009,
+las ciudades de aquéllas que se han vendido en mayor cantidad durante Agosto de ese mismo
+año.
+
+## El esquema externo en un SGBD
+### Creación y manipulación de vistas
+Una vista es una presentación de datos procedentes de una o más tablas, hecha a la medida
+de un usuario. Básicamente, consiste en asignar un nombre a la salida de una consulta y utilizarla
+como si de una tabla almacenada se tratara. De hecho, en general, pueden usarse en lugar de
+cualquier nombre de tabla en las sentencias del DML. La vista es la estructura de más alto nivel
+dentro del nivel lógico y, de hecho, es el mecanismo básico de implementación del nivel externo.
+Salvo que se especifique lo contrario, las vistas no contienen datos; su definición se almacena
+en el diccionario y los datos que representan se reconstruyen cada vez que se accede a ellos.
+A pesar de esto, en Oracle se pueden aplicar restricciones de integridad mediante el uso de
+disparadores de tipo “INSTEAD OF” , que interceptan operaciones DML sobre las vistas para
+programar sus efectos sobre las tablas de las que se derivan.
+Gracias a las vistas, podemos establecer niveles de seguridad adicionales a los que ofrezca el
+sistema, ya que se puede ocultar cierta información y hacer visible a los usuarios sólo la parte de
+la BD que necesiten para realizar sus tareas. Además, simplifican el aspecto la BD y el uso de
+algunos comandos. Como hemos comentado anteriormente, el catálogo de la BD es una porción
+de la misma que usa las vistas para mostrar a cada usuario la información que le concierne de la
+estructura de la BD.
+
+En SQL, la creación de una vista se hace mediante el comando CREATE VIEW, según se
+muestra en el siguiente ejemplo:
+
+**Ejemplo 4.1 Extraer el conjunto de suministros realizados sólo con integrantes procedentes
+de Paris.**
+~~~sql
+CREATE VIEW VentasParis (codpro,codpie,codpj,cantidad,fecha) AS
+SELECT codpro,codpie,codpj,cantidad,fecha
+FROM ventas
+WHERE (codpro,codpie,codpj) IN
+(SELECT codpro,codpie,codpj
+FROM proveedor,pieza,proyecto
+WHERE proveedor.ciudad=’Paris’ and
+pieza.ciudad=’Paris’ and
+proyecto.ciudad=’Paris’);
+~~~
+En la cláusula AS se especifica la consulta que determina qué filas y columnas de la tabla o tablas
+almacenadas forman parte de la vista.
+La ejecución de esta sentencia básicamente produce la inserción de una fila en el catálogo.
+La información registrada puede consultarse a través de la vista `all_views`, cuyos atributos más
+relevantes son :
+`all_views(owner,view_name,text)`, donde owner es el propietario de la vista, view_name el nombre que se le ha asignado y text
+la sentencia select que permite reconstruirla.
+
+#### Consulta de vistas
+A partir de este momento, cualquier usuario autorizado podrá hacer uso de la vista VentasParis
+como si de cualquier tabla se tratara. Así por ejemplo, podemos consultar la relación VentasParis
+y de ella mostrar los códigos de proveedores que suministran al proyecto J4.
+~~~sql
+SELECT distinct codpro
+FROM VentasParis
+WHERE codpj=’J4’;
+~~~
+
+#### Actualización de vistas
+Por su carácter virtual, existen fuertes restricciones a la hora de insertar o actualizar datos en
+una vista debido principalmente a que no siempre cada fila de una vista se corresponde con una
+fila de una tabla concreta. Cuando esto sucede, puede resultar imposible aplicar una modificación
+sobre una fila o un campo de una vista al no poderse encontrar el origen ni la ubicación real de
+la información a modificar. Por ello, los comandos DELETE, INSERT, UPDATE sólo se podrán
+utilizar en determinadas ocasiones.
+Algunas de las restricciones más relevantes son:
+La definición de la vista no podrá incluir cláusulas de agrupamiento de tuplas (GROUP
+BY) o funciones de agregación (MAX, COUNT, AVG,. . . ).
+La definición de la vista no podrá incluir la cláusula DISTINCT, para evitar que una misma
+fila en la vista se corresponda con más de una fila de la tabla base.
+La definición de la vista no podrá incluir operaciones de reunión ni de conjuntos, esto es,
+deberá construirse sobre una única tabla base.
+Todos los atributos que deban tomar siempre valor (NOT NULL y PRIMARY KEY) han
+de estar incluidos necesariamente en la definición de la vista.
+Como puede verse, todas estas restricciones van encaminadas a evitar la ambigüedad que
+pudiera surgir si el sistema no encontrara una correspondencia única entre una tupla de la vista
+y una tupla de una tabla base, que es, en definitiva, donde se van a reflejar las modificaciones
+hechas sobre la vista. Como hemos mencionado, el uso de disparadores “INSTEAD OF”, puede
+ayudar a solventar algunas de estas restricciones.
+
+**Ejemplo 4.2 Extraer el conjunto de piezas procedentes de Londres, prescindiendo del atributo
+ciudad de la tabla original.**
+Para ello creamos una vista que contiene el conjunto de piezas procedentes de Londres sin poner la ciudad, y luego las mostramos
+con `select * from ventasLondres`.
+~~~sql
+create view ventasLondres(codpie, nompie, color, peso) as
+  select codpie, nompie, color, peso from pieza where ciudad= 'Londres';
+~~~
+
+Sobre la vista anterior hacemos una inserción del tipo:
+~~~sql
+INSERT INTO PiezasLondres
+VALUES(’P9’,’Pieza 9’,’rojo’,90);
+~~~
+
+La vista PiezasLondres cumple las condiciones para actualizar la tabla Piezas, pero
+inserta NULL como valor para Ciudad, ya que este atributo no pertenece a la vista.
+
+#### Eliminación de vistas
+El comando para borrar una vista es :
+`DROP VIEW <vista>`.
+Si lo que se pretende es cambiar la definición de una vista existente, es mejor utilizar la
+sentencia:
+`CREATE OR REPLACE VIEW ...<vista>`,
+de esta forma redefiniremos una vista existente sin perder todos los privilegios de acceso
+otorgados sobre la misma.
+Para eliminar la vista de nuestro ejemplo la sentencia será:
+`DROP VIEW VentasParis;`
+
+#### Ejercicios de vistas
+**Ejercicio 4.1 Crear una vista con los proveedores de Londres. ¿Qué sucede si insertamos
+en dicha vista la tupla (’S7’,’Jose Suarez’,3,’Granada’)?. (Buscar en [7] la cláusula52
+El esquema externo en un SGBD
+WITH CHECK OPTION ).**
+~~~sql
+create view proveedoresLondres(codpro, nompro, status) as
+  select codpro, nompro, status from proveedor where ciudad= 'Londres';
+~~~
+Al insertar una nueva tupla que tenga el campo ciudad con valor _Granada_ estaríamos insertando una tupla errónea en la tupla. Para asegurar la consistencia de la vista usamos la cláusula `WITH CHECK OPTION`.
+~~~sql
+create view proveedoresLondres (codpro, nompro, status, ciudad) AS
+    select codpro, nompro, status, ciudad
+    from proveedor
+    where ciudad='Londres' with check option;
+~~~
+
+**Ejercicio 4.2 Crear una vista con los nombres de los proveedores y sus ciudades. Inserta
+sobre ella una fila y explica cuál es el problema que se plantea. ¿Habría problemas de
+actualización?**
+~~~sql
+create view proveedoresYciudades(nompro, ciudad) as
+  select nompro, ciudad from proveedor;
+~~~
+No habría problemas dado que aunque nompro debe ser no nulo, al estar dentro de la
+vista podemos modificarlo.
+
+**Ejercicio 4.3 Crear una vista donde aparezcan el código de proveedor, el nombre de provee-
+dor y el código del proyecto tales que la pieza suministrada sea gris. Sobre esta vista realiza
+alguna consulta y enumera todos los motivos por los que sería imposible realizar una inserción.**
+~~~sql
+create view piezasGrises(codpro, nompro, codpj) as
+  select codpro, nompro, codpj from ventas NATURAL JOIN proveedor NATURAL JOIN pieza
+  where color= 'Gris';
+~~~
+No se pueden insertar tuplas ya que estamos usando operaciones sobre conjuntos y estamos dejando campos con condiciones `not null` y `primary key` sin especificar en la vista.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
