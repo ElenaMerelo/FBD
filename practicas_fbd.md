@@ -1332,33 +1332,36 @@ Es coger la consulta de antes y calcular la suma total y quedarnos con el codpro
 suministran la pieza P3.**
 
 
-Ejercicio 3.49 Encontrar la cantidad media de piezas suministrada a aquellos proveedores
-que venden la pieza P3.
-
-Ejercicio 3.50 Queremos saber los nombres de tus índices y sobre qué tablas están montados,
-indica además su propietario.
-
-Ejercicio 3.51 Implementar el comando DESCRIBE para tu tabla ventas a través de una
-consulta a las vistas del catálogo.
-
-Ejercicio 3.52 Mostrar para cada proveedor la media de productos suministrados cada año. 
-Ejercicio 3.53 Encontrar todos los proveedores que venden una pieza roja. 
-Ejercicio 3.54 Encontrar todos los proveedores que venden todas las piezas rojas. 
-Ejercicio 3.55 Encontrar todos los proveedores tales que todas las piezas que venden son
-rojas.
-
-Ejercicio 3.56 Encontrar el nombre de aquellos proveedores que venden más de una pieza
-roja.
-
-Ejercicio 3.57 Encontrar todos los proveedores que vendiendo todas las piezas rojas cumplen
-la condición de que todas sus ventas son de más de 10 unidades.
-
-Ejercicio 3.58 Coloca el status igual a 1 a aquellos proveedores que sĺo suministran la pieza
-P1.
-
-Ejercicio 3.59 Encuentra, de entre las piezas que no se han vendido en septiembre de 2009,
+**Ejercicio 3.49 Encontrar la cantidad media de piezas suministrada a aquellos proveedores
+que venden la pieza P3.**
+
+**Ejercicio 3.50 Queremos saber los nombres de tus índices y sobre qué tablas están montados,
+indica además su propietario.**
+
+**Ejercicio 3.51 Implementar el comando DESCRIBE para tu tabla ventas a través de una
+consulta a las vistas del catálogo.**
+
+**Ejercicio 3.52 Mostrar para cada proveedor la media de productos suministrados cada año.**
+
+**Ejercicio 3.53 Encontrar todos los proveedores que venden una pieza roja.**
+
+**Ejercicio 3.54 Encontrar todos los proveedores que venden todas las piezas rojas.**
+
+**Ejercicio 3.55 Encontrar todos los proveedores tales que todas las piezas que venden son
+rojas.**
+
+**Ejercicio 3.56 Encontrar el nombre de aquellos proveedores que venden más de una pieza
+roja.**
+
+**Ejercicio 3.57 Encontrar todos los proveedores que vendiendo todas las piezas rojas cumplen
+la condición de que todas sus ventas son de más de 10 unidades.**
+
+**Ejercicio 3.58 Coloca el status igual a 1 a aquellos proveedores que sĺo suministran la pieza
+P1.**
+
+**Ejercicio 3.59 Encuentra, de entre las piezas que no se han vendido en septiembre de 2009,
 las ciudades de aquéllas que se han vendido en mayor cantidad durante Agosto de ese mismo
-año.
+año.**
 
 ## El esquema externo en un SGBD
 ### Creación y manipulación de vistas
@@ -1501,20 +1504,581 @@ create view piezasGrises(codpro, nompro, codpj) as
 ~~~
 No se pueden insertar tuplas ya que estamos usando operaciones sobre conjuntos y estamos dejando campos con condiciones `not null` y `primary key` sin especificar en la vista.
 
+### Información acerca de la base de datos: las vistas del catálogo
+Una vez que conocemos el funcionamiento de las vistas, vamos a estudiar en este apartado el
+catálogo o diccionario de datos de un sistema gestor de bases de datos. El catálogo de la base de
+datos está formado por una serie de tablas y vistas que almacenan datos sobre todos los objetos
+que hay en nuestra base de datos (tablas, restricciones, usuarios, roles, privilegios, ...). Para poder
+ver las vistas en su totalidad hacen falta privilegios especiales, y para modificarlas también. Por
+esta razón, hay definidas una serie de vistas para las consultas más habituales que nos permiten
+acceder a nuestra información.
+
+#### Algunas vistas relevantes del catálogo de la base de datos
+La Tabla 4.1 muestra algunas vistas relevantes que podemos consultar en el catálogo. Una de
+las más útiles es la vista USER_TABLES, que contiene información sobre las tablas de las que
+el usuario es propietario. Algunos de los atributos que el usuario puede consultar son: el nombre
+de la tabla (atributo TABLE_NAME) y el espacio de tablas donde se encuentra almacenada
+(atributo TABLESPACE_NAME). Además, podemos encontrar información estadística sobre su
+tamaño (NUM_ROWS, AVG_SPACE), y muchas otras cosas más.
+**Ejercicio 4.4 Ver la descripción de la vista del catálogo USER_TABLES.**
+`describe user_tables;`
+
+### Gestión de privilegios
+El objetivo de este apartado es identificar los distintos tipos de privilegios que se pueden
+gestionar en Oracle, distinguiendo entre privilegios sobre el sistema y sobre los objetos.
+También haremos algunos ejercicios sobre cómo otorgar y retirar privilegios.
+
+#### Privilegios del sistema
+Permiten al usuario llevar a cabo acciones particulares en la base de
+datos. Existen más de 80 privilegios, y su número continúa aumentando con
+cada nueva versión del SGBD Oracle. Sólo usuarios con privilegios de administración pueden
+gestionar este tipo de privilegios, que pueden clasificarse como sigue:
++ Privilegios que autorizan operaciones de alto nivel en el sistema (como por ejemplo
+CREATE SESSION y CREATE TABLESPACE).
+
++ Privilegios que autorizan la gestión de objetos en el propio esquema de usuario (como por
+ejemplo CREATE TABLE).
+
++ Privilegios que autorizan la gestión de objetos en cualquier esquema (como por ejemplo
+CREATE ANY TABLE).
+
+Vistas relevantes del catálogo:
++ `DICTIONARY`
+Descripciones de las tablas y vistas del diccionario de datos.
+
++ `USER_CATALOG`
+Tablas, vistas, clusters, índices, sinónimos
+y secuencias propiedad del usuario.
+
++ `USER_CONSTRAINTS`
+Definiciones de restricciones sobre las tablas del usuario.
+
++ `USER_CONS_COLUMNS`
+Columnas propiedad del usuario y que se han especificado en la
+definición de restricciones.
+
++ `USER_ROLE_PRIVS`
+Roles autorizados al usuario (de administrador, usuario por defecto, ...).
+
++ `USER_SYS_PRIVS`
+Privilegios del sistema concedidos al usuario.
+
++ `USER_TAB_COLUMNS`
+Descripción de las columnas de las tablas, vistas y clusters pertenecientes
+al usuario.
+
++ `USER_TABLES`
+Tablas del usuario con su nombre, número de columnas,
+información relativa al almacenamiento, estadísticas, ...
+
++ `USER_INDEXES`
+Información de los índices del usuario.
+
++ `USER_CLUSTERS`
+Información de los clústers del usuario.
+
++ `USER_TABLESPACES`
+Espacios de tablas a los que puede acceder el usuario.
+
++ `USER_USERS`
+Información sobre el usuario actual.
+
++ `ALL_USERS`
+Información sobre los usuarios del sistema.
+
++ `ALL_TABLES`
+Información de aquellas tablas a los que tenemos acceso
+porque el propietario lo haya especificado así.
+
++ `ALL_VIEWS`
+Información de aquellas vistas a las que tenemos acceso.
+
+Hay dos comandos del DDL que se encargan de controlar los privilegios: GRANT y REVOKE. Estos permiten otorgar y retirar privilegios a un usuario o a un “role”.
+
+> Concesión de privilegios de sistema
+
+~~~sql
+GRANT {system_priv | role} [,{system_priv | role}] ... TO {user | role | PUBLIC} [,{user | role |
+PUBLIC}]...
+[WITH ADMIN OPTION]
+~~~
+
++ PUBLIC se refiere a todos los usuarios.
+
++ WITH ADMIN OPTION permite que el usuario autorizado pueda otorgar a su vez el
+privilegio a otros.
+
+> Derogación de privilegios de sistema
+
+~~~sql
+REVOKE {system_priv | role} [,{system_priv | role}] ... FROM {user | role | PUBLIC} [,{user | role
+| PUBLIC}]...
+~~~
+
+Sólo permite derogar privilegios que hayan sido explícitamente concedidos mediante el
+uso de GRANT.
+Hay que vigilar los efectos sobre otros privilegios al derogar uno dado.
+No hay efecto de cascada aunque se haya usado en el GRANT la opción WITH ADMIN
+OPTION.
+Para gestionar los privilegios del sistema desde SQL Developer A, el usuario debe poseer
+el “role dba” y, en ese caso, podrá acceder a esta herramienta como “DBA” a partir del menú
+Ver|DBA, tras autentificarse en una conexión con privilegios de administración, podrá desplegar
+la lista de usuarios, seleccionar el usuario deseado, desplegar el menú contextual con el botón
+derecho del ratón y seleccionar la opción “Editar”. A través del formulario que aparecerá podrá,
+entre otras acciones, otorgar y revocar, privilegios y “roles” del sistema.
+
+#### Privilegios sobre los objetos
+La concesión de este tipo de privilegios autoriza la realización de ciertas operaciones sobre
+objetos concretos. La Tabla 4.2 muestra los distintos privilegios que se pueden utilizar en
+relación con los diferentes objetos de la base de datos.
+
+> Concesión de privilegios sobre objetos
+
+~~~sql
+GRANT {object_priv [(column_list)] [,object_priv [(column_list)]] ... | ALL [PRIVILEGES]
+ON [schema.]object
+TO {user | role | PUBLIC} [,{user | role | PUBLIC}]... [WITH GRANT OPTION]
+~~~
++ La lista de columnas sólo tiene sentido cuando se refieren a privilegios INSERT, REFE-
+RENCES o UPDATE.
+
++ ALL se refiere a todos los privilegios que han sido concedidos sobre el objeto con WITH
+GRANT OPTION.
+
++ WITH GRANT OPTION autoriza al usuario para conceder a su vez el privilegio. No se
+puede usar al conceder privilegios a roles.
+
+> Derogación de privilegios de objetos
+
+~~~sql
+REVOKE {object_priv [(column_list)] [,object_priv [(column_list)]]... | ALL [PRIVILEGES]} ON
+[schema.]object FROM {user | role | PUBLIC} [,{user | role | PUBLIC}]... [CASCADE CONSTRAINTS]
+~~~
+
+CASCADE CONSTRAINTS propaga la derogación hacia restricciones de integridad
+referencial relacionadas con el privilegio REFERENCES o ALL.
+Un usuario sólo puede derogar aquellos privilegios que él mismo haya concedido mediante
+GRANT a otro.
+Siempre se hace derogación en cascada con respecto a la concesión con la opción WITH
+GRANT OPTION.
+Desde SQL Developer también se pueden otorgar y retirar privilegios sobre objetos, con
+sólo marcar el objeto en cuestión y, tras desplegar el menú contextual con el botón derecho del
+ratón, seleccionar la opción apropiada en el menú Privilegios (Otorgar o Revocar).
+
+#### Ejercicios de gestión de privilegios
+
+**Ejercicio 4.5 Complete la siguiente secuencia:**
++ Crear en la cuenta una tabla cualquiera.
+`CREATE TABLE acceso (testigo number);`
+
++ Insertar algunas tuplas de prueba.
+~~~sql
+INSERT INTO acceso VALUES(1);
+INSERT INTO acceso VALUES(2);
+~~~
+
++ Autorizar al usuario de tu derecha para que pueda hacer consultas sobre esa tabla.
+`GRANT SELECT ON acceso TO usuario_derecha;`
+
++ Comprobar que se puede acceder a la tabla del usuario de la izquierda.
+`SELECT * FROM usuario_izquierda.acceso;`
+
++ Retirar el privilegio de consulta antes concedido.
+`REVOKE SELECT ON acceso FROM usuario_derecha;`
+
++ Autorizar ahora al usuario de la derecha para que pueda hacer consultas sobre la tabla,
+pero ahora con posibilidad de que este propague ese privilegio.
+`GRANT SELECT ON acceso TO usuario_derecha WITH GRANT OPTION;`
+
++ Propagar el privilegio concedido por el usuario de la izquierda hacia el usuario de la
+derecha.
+`GRANT SELECT ON usuario_izquierda.acceso TO usuario_derecha;`
+
++ Comprobar que se pueden acceder a las tablas del usuario de la derecha y del anterior.
+~~~sql
+SELECT * FROM usuario_izquierda.acceso;
+SELECT * FROM usuario_izquierda_del_usuario_izquierda.acceso;
+~~~
+
++ Retira el privilegio antes concedido. ¿Qué ocurre con los accesos?
+~~~sql
+REVOKE SELECT ON acceso FROM usuario_derecha;
+SELECT * FROM
+usuario_izquierda.acceso;
+SELECT * FROM usuario_izquierda_del_usuario_izquierda.acceso;
+~~~
+
+## El nivel interno de un SGBD
+### Creación y manipulación de índices
+En el mundo de las bases de datos relacionales, los índices son estructuras que se pueden crear
+asociadas a tablas y “clusters”, con el objetivo de acelerar algunas sentencias SQL ejecutadas
+sobre ellos.
+La ausencia o presencia de un índice asociado a una tabla no influye en la sintaxis de las
+sentencias SQL ejecutadas sobre esa tabla. El índice es un medio usado de forma automática por
+un SGBD para acceder de forma rápida a la información de la tabla.
+Un SGBD hace uso de los índices para incrementar el rendimiento cuando:
++ Busca registros con valores específicos en columnas indexadas
++ Accede a una tabla en el orden de las columnas del índice
+
+#### Selección de índices
+Los índices se crean para aumentar la eficiencia en los accesos a las tablas de la base de
+datos, sin embargo ralentizan las actualizaciones y ocupan espacio en disco, ya que, cuando se
+realizan actualizaciones de una tabla de la base de datos, cada uno de los índices basados en esa
+tabla necesita también una actualización.
+Antes de crear un índice se debe determinar si es necesario, es decir, se debe estimar si el
+beneficio en el rendimiento que se obtendrá supera al costo derivado de su mantenimiento.
+El usuario sólo debe crear aquellos índices que considere necesarios y el SGBD se encargará
+de usarlos y mantenerlos automáticamente. El mantenimiento implica la modificación necesaria
+del índice cuando se añaden, modifican o eliminan registros de la tabla.
+Cuando creamos una tabla, Oracle crea automáticamente un índice asociado a la llave
+primaria de la misma. Por tanto, no es necesario ni conveniente crear índices sobre la llave
+primaria porque no sólo no se consigue mejorar el rendimiento sino que se empeora al tener que
+mantener un índice más.
+En esta unidad ejercitaremos el uso de índices basados en árboles B* y otro tipo de índices
+que pueden resultar más útiles en determinadas situaciones.
+Como conclusión, es importante utilizar los índices que se necesiten realmente y se deben
+borrar si no resultan de utilidad frente a las operaciones de consulta habituales.
+
+#### Creación de índices
+Para la creación de índices usaremos la sentencia `CREATE INDEX` cuya sintaxis básica es:
+~~~sql
+CREATE INDEX nombre_del_indice
+ON tabla(campo [ASC | DESC],...)
+~~~
+
+**Ejemplo 5.1 Si queremos acelerar las consultas cuando busquemos a un proveedor por su
+nombre podemos crear un índice asociado al campo nompro de la tabla proveedor.**
+`CREATE INDEX indice_proveedores ON proveedor(nompro);`
+
+Cuando se crea una tabla es mejor insertar los registros antes de crear el índice. Si se crea
+antes el índice, Oracle deberá actualizarlo cada vez que se inserte un registro.
+
+**Ejemplo 5.2 Podemos comprobar la creación de este índice mediante la siguiente consulta al
+catálogo.**
+`SELECT * FROM user_indexes WHERE index_name like ’INDICE_PROVEEDORES’;`
 
 
+#### Índices compuestos
+Un índice compuesto es aquél creado sobre más de un campo de la tabla.
+Los índices compuestos pueden acelerar la recuperación de información cuando la condición
+de la consulta correspondiente referencie a todos los campos indexados o sólo a los primeros. Por
+tanto, el orden de las columnas usado en la definición del índice es importante; generalmente, los
+campos por los que se accede con mayor frecuencia se colocan antes en la creación del índice.
+Supongamos que tenemos una tabla libros con los campos código, título, autor, editorial y
+género y creamos un índice compuesto sobre los campos género, título y editorial :
+`CREATE INDEX indicelibros ON libros(genero,titulo,editorial);`
 
+Dicho índice acelerará la recuperación de información de las consultas cuya condición
+incluya referencias al campo género, a los campos género y título o a los campos género, título y
+editorial. Por ejemplo:
+~~~sql
+SELECT codigo FROM libros WHERE genero=’novela’ and
+titulo=’Sin noticias de Gurb’;
 
+SELECT codigo FROM libros WHERE genero=’novela’ and
+titulo=’Sin noticias de Gurb’
+and editorial=’Planeta’;
+~~~
 
+Sin embargo no mejorará el acceso cuando las consultas no incluyan referencias a los
+primeros campos del índice. Por ejemplo:
+~~~sql
+SELECT codigo FROM libros WHERE titulo=’Sin noticias de Gurb’;
 
+SELECT codigo FROM libros WHERE genero=’novela’ and
+editorial=’Planeta’;
+~~~
 
+#### Estructura de los índices
+Cuando se crea un índice, Oracle recupera los campos indexados de la tabla y los ordena.
+A continuación almacena en una estructura especial los valores de los campos indexados junto
+con un identificador (ROWID) del registro correspondiente.
+Oracle usa árboles B* balanceados para igualar el tiempo necesario para acceder a cualquier
+fila.
+#### Eliminación de índices
+Son varias las razones por las que puede interesar eliminar un índice:
 
++ El índice no se necesitará más
 
++ Por las características de la tabla el índice no mejora la eficiencia
 
++ Necesitamos cambiar los campos que se indexan
++ Necesitamos rehacer un índice muy fragmentado
 
+Para eliminar un índice usaremos la sentencia:
+`DROP INDEX nombre_del_indice;`
+Se debe tener en cuenta que cuando se borra una tabla también se borran todos los índices
+asociados.
+Los índices que Oracle crea asociados a las llaves primarias sólo se pueden borrar elimi-
+nando dichas restricciones.
 
+#### Creación y uso de otros tipos de Índices
+Existen otros tipos de índices cuyo uso está recomendado para determinadas circunstancias.
+> Índices por clave invertida
 
+Están basados en árboles B* e invierten el orden de los bytes de la clave para indizar las
+tuplas. Mejoran el rendimiento en configuraciones paralelizadas de Oracle ((varias instancias
+del RDBMS en ejecución sobre la misma BD) cuando se accede de forma secuencial a los valores
+de la clave. Esto es así porque, para una indexación normal, si una instancia accede a un valor de
+la clave y otra instancia al siguiente, se produce una contención de bloque de la primera instancia
+con respecto a la segunda. En cambio, usando el índice invertido, los valores consecutivos de la
+clave no estarán de forma consecutiva en el índice y, por tanto, no se producirá tal contención,
+mejorando el rendimiento. La contrapartida por el uso de este tipo de índice es que las búsquedas
+por rangos del valor de la clave no se pueden realizar en el conjunto secuencia, empeorando el
+rendimiento. La sintaxis es la misma que la de los índices normales salvo que se usa la cláusula
+REVERSE para indicar que son de este tipo de índice:
+`CREATE INDEX nombre_del_indice ON tabla(campo [ASC | DESC], ...) REVERSE;`
 
+>Índices BITMAP
+
+Cuando los valores de la clave tiene una baja cardinalidad, el uso de este tipo de índice puede
+ser apropiado. Se usa la cláusula BITMAP para indicar que son de este tipo de índice. Ejemplo
+de uso frente a índice normal:
+1. Crear tabla ejemplo: `CREATE TABLE Prueba_Bit (color Varchar2(10))`;
+
+2. Insertar 50000 tuplas con valores de color aleatorios. Ejecutar:
+~~~sql
+BEGIN
+FOR i IN 1..50000 LOOP
+INSERT INTO Prueba_bit (
+select decode(round(dbms_random.value(1,4)),1,’Rojo’,2,’Verde’,
+3,’Amarillo’,4,’Azul’) from dual);
+END LOOP;
+END;
+~~~
+
+3. Crear un índice normal: `CREATE INDEX Prueba_IDX ON Prueba_Bit(color);`
+
+4. Ejecutar:
+~~~sql
+SELECT count(*) FROM Prueba_Bit
+WHERE color=’Amarillo’ OR color=’Azul’;
+~~~
+
+5. Apuntar el tiempo empleado.
+
+6. Pinchar el botón “Explicación del Plan” (F10) para ver el plan seleccionado para ejecutar
+esa consulta.
+
+7. Borrar índice normal: `DROP INDEX Prueba_IDX;`
+
+8. Crear índice BITMAP:
+`CREATE BITMAP INDEX Prueba_BITMAP_IDX ON Prueba_Bit(color);`
+
+9. Volver a ejecutar la consulta anterior.
+
+> Tablas organizadas por Índice (IOT)
+
+Este tipo de tablas organizan sus tuplas según el valor de la clave utilizando una estructura de
+árbol B*. La diferencia respecto a un índice normal estriba en que en las hojas están las tuplas,
+no los RID que apuntan a las tuplas. Para crear estas tablas se usa la cláusula ORGANIZATION
+INDEX en la sentencia CREATE TABLE, normalmente utilizan los campos de la clave primaria
+para ordenar la tabla. Una recuperación total devuelve los resultados ordenados por la clave. El
+siguiente ejemplo ilustra su uso:
+
+1. Crear la tabla:
+`CREATE TABLE Prueba_IOT (id NUMBER PRIMARY KEY) ORGANIZATION INDEX;`
+
+2. Carga de 2000 tuplas con id entre 1 y 2000, ordenadas de forma aleatoria. Abrir y ejecutar
+el script SQL: Carga_prueba_iot.sql.
+
+3. Ejecutar la consulta: `SELECT id FROM Prueba_IOT`. Observar el orden en que se obtie-
+nen las tuplas en relación al campo id.
+
+4. Pinchar el botón “Explicación del Plan” (F10) para ver el plan seleccionado para ejecutar
+esa consulta.
+
+5. Borrar tabla: DROP TABLE Prueba_IOT;
+
+### “Clusters”
+Un “cluster” proporciona un método alternativo de almacenar información en las tablas. Un
+“cluster” lo forman un conjunto de tablas que se almacenan en los mismos bloques de datos
+porque comparten campos comunes (clave del “cluster”) y se accede frecuentemente a ellas de
+forma conjunta.
+Por ejemplo, las tablas proveedor y ventas comparten el campo codpro. Si se incluyen las
+dos tablas en el mismo “cluster”, Oracle físicamente almacena todas las filas de cada codpro
+de ambas tablas en los mismos bloques de datos. No se deben usar “clusters” con tablas a las que
+se accede frecuentemente de forma individual. Supongamos que se accede de forma conjunta a la información de cada proveedor junto
+con los datos de sus suministros. En ese caso se incluirían ambas tablas en un mismo “cluster”,
+compartiendo el campo codpro.
+
+Como los “clusters” almacenan registros relacionados en los mismos bloques de datos, los
+beneficios obtenidos son:
+
++ Se reduce el acceso a disco y se mejora el rendimiento en reuniones de las tablas del
+clúster
+
++ La clave del “cluster” (columnas comunes entre las tablas del “cluster”) almacena cada
+valor una sola vez de modo independiente al número de registros de las tablas que
+contengan dicho valor
+
+Después de crear un “cluster” se pueden crear las tablas que pertenecen al “cluster”.
+
+#### Selección de tablas y clave del “cluster”
+El “cluster” se debe usar para almacenar tablas que son principalmente consultadas y escasa-
+mente modificadas. Además, dichas consultas deben reunir las tablas del clúster.
+Si no se cumplen estos requisitos, el “cluster” resultante tendrá un efecto negativo sobre
+el rendimiento porque no aprovechamos las ventajas que nos ofrece y sin embargo estamos
+pagando el costo de su mantenimiento.
+Se debe elegir la clave del “cluster” con cuidado. Si se usan varios campos en consultas que
+reunen las tablas, se debe usar una llave compuesta.
+Una buena clave del “cluster” debe tener un número adecuado de valores distintos para que
+la información asociada a cada valor de la clave ocupe aproximadamente un bloque de datos.
+Si la cantidad de valores distintos de la llave del “cluster” es muy pequeña se desperdicia
+espacio y la mejora en el rendimiento es muy baja. Por ello es conveniente evitar claves de
+“cluster” demasiado específicas.
+Cuando la cantidad de valores distintos es demasiado alta, la búsqueda del registro a partir de
+la clave del “cluster” es lenta. Por tanto, se deben evitar claves de “cluster” demasiado generales.
+El acceso a los elementos del “cluster” a través de la clave puede mejorarse mediante el uso
+de índices B* o mediante “Hash”. En este último caso, podemos crear un “cluster” que sólo
+tenga asociada una tabla, de esta forma implementaremos el método de acceso “Hash” sobre esa
+tabla.
+Veremos, en primer lugar como se crea un “cluster” accedido mediante índices basado en
+árboles B*, después veremos como se crea un “cluster Hash” y una tabla accedida mediante
+“Hash”.
+
+#### Creación de un “cluster” indizado
+Para la creación de un “cluster” indizado se emplea la sentencia CREATE CLUSTER cuya
+sintaxis básica es:
+`CREATE CLUSTER nombre_del_cluster(campo tipo_de_dato);`
+
+**Ejemplo 5.3 Para crear el “cluster” mostrado en la figura 5.1, que está sobre ventas y proveedor, usamos la siguiente sentencia:**
+`CREATE CLUSTER cluster_codpro(codpro char(3));`
+
+#### Creación de las tablas del “cluster” indizado
+Una vez que se ha creado un “cluster” se pueden crear las tablas que contendrá. Para ello se
+emplea la sentencia CREATE TABLE usando la opción CLUSTER en la que se indica el nombre
+del “cluster” al que pertenecerá la tabla y, entre paréntesis, el nombre del campo o campos que
+son la clave del “cluster”.
+~~~sql
+CREATE TABLE proveedor2(
+codpro char(3) primary key,
+nompro varchar2(30) not null,
+status number(2) check(status>=1 and status<=10),
+ciudad varchar2(15))
+CLUSTER cluster_codpro(codpro);
+
+CREATE TABLE ventas2(
+codpro char(3) references proveedor2(codpro),
+codpie references pieza(codpie),
+codpj references proyecto(codpj),
+cantidad number(4),
+fecha date,
+primary key (codpro,codpie,codpj))
+CLUSTER cluster_codpro(codpro);
+~~~
+
+#### Creación del índice del “cluster”
+Antes de que se pueda insertar información en las tablas del “cluster” es necesario que se
+haya creado un índice. Esto se logra mediante la sentencia CREATE INDEX.
+
+**Ejemplo 5.4 Para crear el índice del “cluster” de la figura 5.1 usaremos:**
+`CREATE INDEX indice_cluster ON CLUSTER cluster_codpro;`
+
+**Ejercicio 5.1 Rellena las tablas proveedor2 y ventas2 con los datos de sus homólogas
+originales.**
+
+**Ejercicio 5.2 Realiza alguna consulta a los datos contenidos en el “cluster” cluster_codpro.**
+
+**Ejercicio 5.3 Consulta en el catálogo los objetos recién creados**
+
+#### Creación de un “cluster hash”
+Para la creación de un “cluster hash” se emplea la misma sentencia CREATE CLUSTER con
+las cláusulas HASH IS, SIZE y HASKEYS.
+~~~sql
+CREATE CLUSTER nombre_del_cluster(campo tipo_de_dato)
+[HASH IS campo] SIZE <tamaño>
+HASKEYS <cant_valores_clave>;
+~~~
+
+La cláusula HASH IS se puede usar solamente si la clave del “cluster” está compuesta por
+un único atributo de tipo NUMBER y contiene enteros uniformemente distribuidos. Si no se dan
+esas condiciones, se omite esa cláusula y Oracle usará la función “hash” que tiene implementada
+por defecto.
+Mediante la cláusla SIZE debemos establecer cuanto espacio van a ocupar todas las tuplas
+del “cluster” que tengan un mismo valor para la clave del “cluster”. Este valor debe estimarse a
+partir del tamaño estimado de cada tupla y de la cantidad máxima de ellas que van a tomar un
+mismo valor de la clave. Un valor escaso en esta estimación favorecerá la aparición de colisiones
+(que haya mas tuplas para un valor de la clave del espacio habilitado para las mismas y deban
+ubicarse en otro bloque distinto), lo que deteriorará el rendimiento. Si primamos el rendimiento
+frente al uso óptimo del espacio de almacenamiento, debemos añadir un 15 % al valor estimado
+de SIZE.
+Mediante el parámetro HASHKEYS establecemos cuantos valores distintos va a tomar la
+clave del “cluster”, Oracle calcula el número primo inmediatamente superior al valor que le
+indicamos y ese el que usa para determinar en su función “hash” los valores distintos que va a
+tomar la clave.
+
+**Ejemplo 5.5 Crear el “cluster” mostrado en la figura 5.1, suponiendo que vamos a tener unos
+50 proveedores y una media de 30 ventas por proveedor.**
+
+En este ejemplo, nuevamente la clave del “cluster” sería codpro y, puesto que va a tener unos
+50 valores distintos, HASHKEYS sería 50. El valor de SIZE lo estimaríamos, en función del
+tamaño de las tuplas de la tabla proveedor y de la tabla ventas de la figura 5.1 y de la cantidad
+media de ventas por valor de la clave (30), de esta manera 1 :
+Tamaño de tupla de proveedor: codpro=3 bytes, nompro=30 bytes, status=2 bytes y
+ciudad=15 bytes. Total=50 bytes.
+Tamaño de tupla de ventas; codpie=3 bytes, codpj=3 bytes, cantidad=3 bytes y fecha=7
+bytes. Total=16 bytes.
+Como por cada proveedor (tamaño 50 bytes) tendremos una media de 30 ventas (tamaño 16
+bytes por tupla). Entonces el valor de SIZE sería: 50+30*16=530 bytes a lo que añadimos
+un 15 %, quedando: SIZE 610
+Por lo que la sentencia de creación del “cluster” quedaría así:
+CREATE CLUSTER cluster_codpro_hash(codpro char(3)) SIZE 610 HASHKEYS 50;
+Después añadiríamos las tablas del “cluster” de la misma manera que hacíamos con el
+“cluster” indizado.
+
+#### Creación de un “cluster hash” de una sóla tabla
+Si queremos utilizar acceso mediante “hash” para una tabla, en primer lugar hemos de crear
+un “cluster hash” de la misma manera que hemos visto en el apartado anterior, sólo que hemos
+de utilizar la cláusula SINGLE TABLE y, después la crear la tabla asociándola al “cluster”.
+**Ejemplo 5.6 Crear la estructura necesaria para que la tabla proveedor sea accedida mediante
+“hashing” a través del campo codpro, suponiendo que va a haber un máximo de 100 proveedores.**
+
+Como hemos calculado, el tamaño de las tuplas de proveedor es de 50 bytes, por lo que
+SIZE tomará ese valor (no es necesario incrementar ese tamaño, como en el ejemplo anterior) y
+HASKEYS tomará el valor 100. Por lo que la sentencia de creación del “cluster” sería:
+>Podemos usar la función VSIZE para calcular los bytes usados por cada tipo de dato, p.e. si status es un number(2),
+para calcular su tamaño usamos: SELECT VSIZE(99) FROM dual; que devuelve 2 bytes de almacenamiento
+
+~~~sql
+CREATE CLUSTER cluster_codpro_single_hash(codpro char(3))
+SIZE 50 SINGLE TABLE HASHKEYS 100;
+~~~
+y la sentencia de creación de la tabla sería:
+~~~sql
+CREATE TABLE proveedor_hash(
+codpro char(3) primary key,
+nompro varchar2(30) not null,
+status number(2) check(status>=1 and status<=10),
+ciudad varchar2(15))
+CLUSTER cluster_codpro_single_hash(codpro);
+~~~
+
+#### Eliminación de “clusters”
+Un “cluster” puede ser eliminado si las tablas del “cluster” no son necesarias. Cuando se
+borra el “cluster” también se borra el índice del “cluster”.
+Para la eliminación de un “cluster” se emplea la sentencia DROP CLUSTER cuya sintaxis
+es:
+~~~sql
+DROP CLUSTER nombre_del_cluster
+[INCLUDING TABLES [CASCADE CONSTRAINTS]];
+~~~
+Si un “cluster” contiene tablas no podrá ser eliminado a menos que se eliminen antes las
+tablas o que se incluya en la sentencia la opción INCLUDING TABLES.
+El “cluster” no podrá ser borrado si las tablas contienen campos que son referenciados por
+claves externas localizadas en tablas externas al “cluster”. Para que se pueda borrar el “cluster”
+se deben eliminar las referencias externas mediante la opción CASCADE CONSTRAINTS.
+
+#### Eliminación de tablas del “cluster”
+Se pueden eliminar tablas individuales de un “cluster” usando la sentencia DROP TABLE.
+La eliminación de una tabla del “cluster” no afecta al “cluster” ni a las otras tablas ni al
+índice del “cluster”.
+
+#### Eliminación del índice del “cluster”
+El índice de un “cluster” puede ser eliminado en cualquier momento sin afectar al “cluster”
+ni a las tablas del mismo. Sin embargo no será posible acceder a la información contenida en las
+tablas hasta que se reconstruya el índice. Para la eliminación del índice se emplea la sentencia
+DROP INDEX.
 
 
 
